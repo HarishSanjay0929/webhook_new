@@ -1,85 +1,844 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <title>Simple Webhook Receiver</title>
+  <title>Webhook Receiver - Endpoints List Enhanced UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
-    #requests { margin-top: 20px; }
-    pre { background: #222; color: #eee; padding: 10px; overflow: auto; }
-    #endpointInput { width: 300px; }
+    :root {
+      --color-bg: #f5f7fa;
+      --color-card: #ffffff;
+      --color-text: #2c3e50;
+      --color-primary: #3b82f6;
+      --color-primary-dark: #2563eb;
+      --color-error: #ef4444;
+      --color-success: #10b981;
+      --color-badge-get: #22c55e;
+      --color-badge-post: #3b82f6;
+      --color-badge-put: #f59e0b;
+      --color-badge-delete: #ef4444;
+      --color-scrollbar-thumb: rgba(44, 62, 80, 0.25);
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --transition-fast: 0.2s ease-in-out;
+      --border-radius: 8px;
+      --shadow-soft: 0 4px 12px rgba(0,0,0,0.05);
+      --shadow-hover: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    /* Reset and Base Styles */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: var(--font-family);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      grid-template-rows: 60px 1fr 48px;
+      grid-template-areas:
+        "header header"
+        "sidebar main"
+        "footer footer";
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      grid-area: header;
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 24px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
+      user-select: none;
+      box-shadow: var(--shadow-soft);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    footer {
+      grid-area: footer;
+      background: var(--color-primary);
+      color: white;
+      font-size: 0.9rem;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+      user-select: none;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--color-card);
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: inset -1px 0 0 #e0e7ff;
+      overflow-y: auto;
+      border-right: 1px solid #e0e7ff;
+      transition: background-color var(--transition-fast);
+    }
+
+    .sidebar button, 
+    .sidebar input[type="text"] {
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .sidebar button {
+      background-color: var(--color-primary);
+      border: none;
+      color: white;
+      padding: 14px 22px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      user-select: none;
+      filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.1));
+      width: 100%;
+    }
+    .sidebar button:hover {
+      background-color: var(--color-primary-dark);
+      box-shadow: var(--shadow-hover);
+    }
+    .sidebar button:disabled {
+      background-color: #9ca3af;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .sidebar input[type="text"] {
+      border: 1.5px solid #cbd5e1;
+      padding: 14px 18px;
+      width: 100%;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+    .sidebar input[type="text"]:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 8px var(--color-primary);
+    }
+
+    /* New endpoint list container */
+    #endpointListContainer {
+      margin-top: 10px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-soft);
+      overflow-y: auto;
+      max-height: 220px;
+      background-color: #fefefe;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #endpointListContainer h3 {
+      margin: 8px 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      user-select: none;
+      background-color: #fefefe;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    #endpointList {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 0.9rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    #endpointList li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 10px 10px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.2s ease-in-out;
+    }
+    #endpointList li:hover,
+    #endpointList li:focus {
+      background-color: #bfdbfe;
+      outline: none;
+      color: var(--color-primary-dark);
+    }
+    #endpointList li:last-child {
+      border-bottom: none;
+    }
+    #endpointList li[aria-selected="true"] {
+      background-color: var(--color-primary);
+      color: white;
+      font-weight: 700;
+    }
+
+    /* Delete button styling */
+    .delete-endpoint-btn {
+      background-color: #ef4444;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+      padding: 4px 15px;
+      font-size: 0.95em;
+      font-weight: 700;
+      cursor: pointer;
+      flex: 0 0 auto;
+      white-space: nowrap;
+      margin-left: 12px;
+      min-width: unset;
+      max-width: 100px;
+      height: auto;
+      box-shadow: none;
+      align-self: center;
+      transition: background 0.15s;
+    }
+    .delete-endpoint-btn:hover {
+      background-color: #dc2626;
+    }
+    #endpointList li {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0;
+    }
+    #endpointList li span {
+      flex: 1 1 0%;
+      min-width: 0;
+      word-break: break-all;
+    }
+
+
+    /* ==== CUSTOM SCROLLBAR STYLES ==== */
+    .sidebar,
+    #endpointList,
+    #endpointListContainer {
+      scrollbar-width: thin;
+      scrollbar-color: #b0c6f9 #f7faff;
+    }
+
+    .sidebar::-webkit-scrollbar,
+    #endpointList::-webkit-scrollbar,
+    #endpointListContainer::-webkit-scrollbar {
+      width: 8px;
+      background: #f7faff;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb,
+    #endpointList::-webkit-scrollbar-thumb,
+    #endpointListContainer::-webkit-scrollbar-thumb {
+      background: #b0c6f9;
+      border-radius: 12px;
+      border: 2px solid #f7faff;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover,
+    #endpointList::-webkit-scrollbar-thumb:hover,
+    #endpointListContainer::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+
+    .sidebar::-webkit-scrollbar-corner, 
+    #endpointList::-webkit-scrollbar-corner,
+    #endpointListContainer::-webkit-scrollbar-corner {
+      background: none;
+    }
+    /* ==== END CUSTOM SCROLLBAR ==== */
+
+    .main {
+      grid-area: main;
+      padding: 30px 24px;
+      overflow-y: auto;
+      background: var(--color-bg);
+    }
+
+    /* Endpoint URL with copy button container */
+    #endpointContainer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    #endpointUrl {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--color-primary-dark);
+      background: #e0e7ff;
+      border-radius: var(--border-radius);
+      padding: 12px 18px;
+      border: 2px solid var(--color-primary);
+      flex: 1 1 auto;
+      min-width: 0;
+      user-select: all;
+      cursor: text;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--transition-fast);
+    }
+    #endpointUrl:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    #copyEndpointBtn {
+      background-color: var(--color-primary);
+      border: none;
+      color: white;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+      box-shadow: var(--shadow-soft);
+      user-select: none;
+    }
+    #copyEndpointBtn:hover:not(:disabled) {
+      background-color: var(--color-primary-dark);
+      box-shadow: var(--shadow-hover);
+    }
+    #copyEndpointBtn:disabled {
+      background-color: #a5b4fc;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    #filterInput {
+      border-radius: var(--border-radius);
+      border: 1.5px solid #cbd5e1;
+      padding: 14px 18px;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 24px;
+      font-weight: 600;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+    }
+    #filterInput:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 10px var(--color-primary);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background-color: var(--color-card);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-soft);
+      table-layout: fixed;
+      overflow: hidden;
+    }
+
+    thead {
+      background-color: var(--color-primary);
+      color: white;
+      user-select: none;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    th, td {
+      padding: 16px 20px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 1rem;
+      vertical-align: middle;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:hover {
+      background-color: #eff6ff;
+      cursor: default;
+      transition: background-color 0.15s ease-in-out;
+    }
+
+    .method-badge {
+      display: inline-block;
+      padding: 5px 14px;
+      color: white;
+      font-weight: 700;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      user-select: none;
+      position: relative;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .method-badge.GET { background-color: var(--color-badge-get); }
+    .method-badge.POST { background-color: var(--color-badge-post); }
+    .method-badge.PUT { background-color: var(--color-badge-put); }
+    .method-badge.DELETE { background-color: var(--color-badge-delete); }
+    .method-badge.PATCH { background-color: #8b5cf6; }
+
+    .method-badge[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      top: -34px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(44, 62, 80, 0.85);
+      color: white;
+      padding: 6px 12px;
+      border-radius: var(--border-radius);
+      font-size: 0.75rem;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0.95;
+      z-index: 10;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    details {
+      background: #f3f4f6;
+      border-radius: var(--border-radius);
+      margin-top: 10px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
+      transition: background-color var(--transition-fast);
+      border: 1px solid #d1d5db;
+    }
+
+    summary {
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      user-select: none;
+      color: var(--color-primary-dark);
+      font-size: 1.05rem;
+      border-radius: var(--border-radius);
+      list-style: none;
+      transition: color var(--transition-fast);
+    }
+    summary::-webkit-details-marker {
+      display:none;
+    }
+    details[open] summary {
+      color: var(--color-primary);
+    }
+    details[open] {
+      background-color: #dbf4ff;
+      border-color: #93c5fd;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px 20px;
+      font-family: 'Fira Mono', monospace, monospace;
+      font-size: 0.9rem;
+      background-color: #111827;
+      color: #d1d5db;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      border-top: 2px solid #2563eb;
+      transition: background-color var(--transition-fast), color var(--transition-fast);
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.8);
+    }
+
+    pre::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    pre::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    pre::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+    }
+
+    .timestamp {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #6b7280;
+      user-select: none;
+    }
+
+    #filterInput::placeholder {
+      font-style: italic;
+      color: #9ca3af;
+    }
+
+    #requests .no-requests {
+      margin: 80px auto;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 1.3rem;
+      user-select: none;
+      opacity: 0.7;
+      padding: 80px 16px;
+    }
+    #requests .no-requests svg {
+      width: 56px;
+      height: 56px;
+      margin-bottom: 20px;
+      fill: #cbd5e1;
+      opacity: 0.7;
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px auto auto 48px;
+        grid-template-areas:
+          "header"
+          "sidebar"
+          "main"
+          "footer";
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid #e0e7ff;
+        flex-direction: row;
+        align-items: center;
+        padding: 12px 16px;
+        overflow-x: auto;
+        gap: 16px;
+      }
+      .sidebar > * {
+        flex: 1 1 auto;
+        min-width: auto;
+      }
+      #endpointInput {
+        width: 100%;
+        margin: 0;
+      }
+      button {
+        min-width: 130px;
+      }
+      .main {
+        height: 50vh;
+      }
+      table th, table td {
+        font-size: 0.9rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Webhook Receiver</h1>
+  <header>
+    Webhook Receiver
+  </header>
 
-  <button id="newEndpointBtn">Create New Endpoint</button>
-  <div>
-    <input id="endpointInput" placeholder="Enter your endpoint ID here" />
-    <button id="connectBtn">Connect</button>
-  </div>
+  <aside class="sidebar" role="complementary" aria-label="Endpoint controls">
+    <button id="newEndpointBtn" aria-label="Create a new endpoint">Create New Endpoint</button>
+    <input id="endpointInput" type="text" aria-label="Enter or paste endpoint ID" placeholder="Enter your endpoint ID here" />
+    <button id="connectBtn" aria-label="Connect to the entered endpoint">Connect</button>
+    
+    <div id="endpointListContainer" aria-label="Your created endpoints" style="margin-top: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-height: 220px; background-color: #fefefe; overflow-y: auto;">
+      <h3 style="margin: 8px 12px; font-weight: 700; font-size: 1.1rem; user-select: none; background-color:#fefefe; position: sticky; top:0; z-index: 1; border-bottom: 1px solid #e5e7eb;">Your Endpoints</h3>
+      <ul id="endpointList" tabindex="0" style="list-style:none; margin:0; padding:0; font-size: 0.9rem; max-height: 220px; overflow-y: auto;"></ul>
+    </div>
+  </aside>
 
-  <h2 id="endpointUrl"></h2>
+  <main class="main" role="main">
+    <div id="endpointContainer" role="region" aria-label="Current endpoint URL, with copy button">
+      <div id="endpointUrl" aria-live="polite" aria-atomic="true" tabindex="0" title="Your endpoint URL will appear here"></div>
+      <button id="copyEndpointBtn" aria-label="Copy endpoint URL" title="Copy endpoint URL" disabled>Copy</button>
+    </div>
 
-  <div id="requests"></div>
+    <input type="text" id="filterInput" placeholder="Search requests by method or timestamp..." aria-label="Filter displayed requests" autocomplete="off" />
+
+    <div id="requests" aria-live="polite" aria-atomic="false" aria-relevant="additions"></div>
+  </main>
+
+  <footer>
+    &copy; 2024 Webhook Receiver App
+  </footer>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io();
+    (function() {
+      const socket = io();
+      const newEndpointBtn = document.getElementById('newEndpointBtn');
+      const connectBtn = document.getElementById('connectBtn');
+      const endpointInput = document.getElementById('endpointInput');
+      const endpointUrl = document.getElementById('endpointUrl');
+      const copyEndpointBtn = document.getElementById('copyEndpointBtn');
+      const requestsDiv = document.getElementById('requests');
+      const filterInput = document.getElementById('filterInput');
+      const endpointListEl = document.getElementById('endpointList');
 
-    const newEndpointBtn = document.getElementById('newEndpointBtn');
-    const connectBtn = document.getElementById('connectBtn');
-    const endpointInput = document.getElementById('endpointInput');
-    const endpointUrl = document.getElementById('endpointUrl');
-    const requestsDiv = document.getElementById('requests');
-    let currentEndpoint = null;
+      let currentEndpoint = null;
+      let allRequests = [];
+      let endpoints = []; // array of {id, createdAt}
 
-    function renderRequest(req, index) {
-      return `<h3>Request ${index + 1} - ${req.method} @${req.timestamp}</h3>
-      <b>Query Parameters:</b>
-      <pre>${JSON.stringify(req.query, null, 2)}</pre>
-      <b>Headers:</b>
-      <pre>${JSON.stringify(req.headers, null, 2)}</pre>
-      <b>Body:</b>
-      <pre>${JSON.stringify(req.body, null, 2)}</pre><hr>`;
-    }
+      function formatTimestamp(iso) {
+        const dt = new Date(iso);
+        if (isNaN(dt)) return iso;
+        return dt.toLocaleString();
+      }
 
-    function addRequest(req) {
-      const html = renderRequest(req, requestsDiv.children.length);
-      requestsDiv.innerHTML = html + requestsDiv.innerHTML;
-    }
+      function createMethodBadge(method) {
+        const methodUpper = (method || '').toUpperCase();
+        const valid = ['GET','POST','PUT','DELETE','PATCH'].includes(methodUpper) ? methodUpper : 'OTHER';
+        const span = document.createElement('span');
+        span.className = 'method-badge ' + valid;
+        span.setAttribute('title', `HTTP Method: ${valid}`);
+        span.textContent = valid;
+        return span;
+      }
 
-    newEndpointBtn.onclick = async () => {
-      const res = await fetch('/new');
-      const data = await res.json();
-      currentEndpoint = data.id;
-      endpointInput.value = currentEndpoint;
-      endpointUrl.textContent = `Your endpoint URL: ${data.url}`;
-      requestsDiv.innerHTML = '';
-      socket.emit('join', currentEndpoint);
-    };
+      function renderRequestRow(req, index) {
+        const tr = document.createElement('tr');
 
-    connectBtn.onclick = () => {
-      const id = endpointInput.value.trim();
-      if (!id) return alert('Please enter an endpoint ID');
-      currentEndpoint = id;
-      endpointUrl.textContent = `Your endpoint URL: ${location.protocol}//${location.host}/${id}`;
-      requestsDiv.innerHTML = '';
-      socket.emit('join', currentEndpoint);
-    };
+        const tdNum = document.createElement('td');
+        tdNum.innerHTML = `<strong>#${index + 1}</strong><span class="timestamp">${formatTimestamp(req.timestamp)}</span>`;
+        tr.appendChild(tdNum);
 
-    socket.on('init_requests', (reqs) => {
-      requestsDiv.innerHTML = '';
-      reqs.slice().reverse().forEach(addRequest);
-    });
+        const tdMethod = document.createElement('td');
+        tdMethod.appendChild(createMethodBadge(req.method));
+        tr.appendChild(tdMethod);
 
-    socket.on('new_request', (req) => {
-      addRequest(req);
-    });
+        const tdDetails = document.createElement('td');
 
-    socket.on('error', (msg) => {
-      alert(msg);
-    });
+        function createDetails(summaryText, jsonObj) {
+          const details = document.createElement('details');
+          details.open = false;
+
+          const summary = document.createElement('summary');
+          summary.textContent = summaryText + ` (${Object.keys(jsonObj || {}).length})`;
+          details.appendChild(summary);
+
+          const pre = document.createElement('pre');
+          try {
+            pre.textContent = JSON.stringify(jsonObj || {}, null, 2);
+          } catch(e) {
+            pre.textContent = 'Invalid JSON';
+          }
+          details.appendChild(pre);
+          return details;
+        }
+
+        tdDetails.appendChild(createDetails('Query Parameters', req.query));
+        tdDetails.appendChild(createDetails('Headers', req.headers));
+        tdDetails.appendChild(createDetails('Body', req.body && typeof req.body === 'object' ? req.body : { value: req.body === undefined ? '(empty)' : req.body }));
+
+        tr.appendChild(tdDetails);
+
+        return tr;
+      }
+
+      function renderTable(requests) {
+        if (!requests || requests.length === 0) {
+          requestsDiv.innerHTML = `
+            <div class="no-requests" role="alert" aria-live="assertive">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+              No requests have been received yet.
+            </div>`;
+          return;
+        }
+
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Method</th>
+            <th scope="col">Details</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        requests.forEach((req, i) => {
+          tbody.appendChild(renderRequestRow(req, i));
+        });
+        table.appendChild(tbody);
+
+        requestsDiv.innerHTML = '';
+        requestsDiv.appendChild(table);
+      }
+
+      function renderFilteredRequests() {
+        const filter = filterInput.value.trim().toLowerCase();
+        let filtered = allRequests;
+        if (filter) {
+          filtered = allRequests.filter(req => {
+            return (
+              (req.method && req.method.toLowerCase().includes(filter)) ||
+              (req.timestamp && req.timestamp.toLowerCase().includes(filter)) ||
+              JSON.stringify(req.body).toLowerCase().includes(filter)
+            );
+          });
+        }
+        renderTable(filtered);
+      }
+
+      async function loadEndpoints() {
+        try {
+          const response = await fetch('/endpoints');
+          const data = await response.json();
+          endpoints = data;
+
+          endpointListEl.innerHTML = '';
+
+          if (endpoints.length === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'No endpoints created yet.';
+            li.style.fontStyle = 'italic';
+            li.tabIndex = -1;
+            endpointListEl.appendChild(li);
+            return;
+          }
+
+          endpoints.forEach(ep => {
+            const li = document.createElement('li');
+            const span = document.createElement('span');
+            span.textContent = `${ep.id} (Created: ${new Date(ep.createdAt).toLocaleString()})`;
+            span.style.flex = '1';
+
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Delete';
+            delBtn.className = 'delete-endpoint-btn';
+            delBtn.onclick = async (e) => {
+              e.stopPropagation();
+              if (confirm('Are you sure you want to delete this endpoint and all its requests?')) {
+                try {
+                  const res = await fetch(`/endpoints/${ep.id}`, { method: 'DELETE' });
+                  if (!res.ok) throw new Error('Failed to delete endpoint');
+                  await loadEndpoints();
+                  if (currentEndpoint === ep.id) {
+                    currentEndpoint = null;
+                    endpointInput.value = '';
+                    endpointUrl.textContent = '';
+                    copyEndpointBtn.disabled = true;
+                    allRequests = [];
+                    renderTable(allRequests);
+                  }
+                } catch(err) {
+                  alert('Error deleting endpoint: ' + err.message);
+                }
+              }
+            };
+
+            li.appendChild(span);
+            li.appendChild(delBtn);
+            li.tabIndex = 0;
+            li.setAttribute('role', 'option');
+            li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
+            li.onclick = () => selectEndpoint(ep.id);
+            li.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectEndpoint(ep.id); } };
+
+            endpointListEl.appendChild(li);
+          });
+        } catch (err) {
+          console.error('Cannot load endpoints:', err);
+          endpointListEl.innerHTML = '<li><em>Error loading endpoints.</em></li>';
+        }
+      }
+
+      function selectEndpoint(id) {
+        if (currentEndpoint === id) return;
+
+        currentEndpoint = id;
+        endpointInput.value = id;
+        endpointUrl.textContent = `Your endpoint URL: ${location.protocol}//${location.host}/${id}`;
+        copyEndpointBtn.disabled = false;
+        allRequests = [];
+        renderTable(allRequests);
+        socket.emit('join', id);
+        filterInput.value = '';
+
+        [...endpointListEl.children].forEach(li => {
+          li.setAttribute('aria-selected', li.textContent.startsWith(id) ? 'true' : 'false');
+        });
+      }
+
+      newEndpointBtn.onclick = async () => {
+        try {
+          const res = await fetch('/new');
+          const data = await res.json();
+          await loadEndpoints();
+          selectEndpoint(data.id);
+        } catch (e) {
+          alert('Error creating new endpoint: ' + e.message);
+        }
+      };
+
+      connectBtn.onclick = () => {
+        const id = endpointInput.value.trim();
+        if (!id) return alert('Please enter an endpoint ID');
+        selectEndpoint(id);
+      };
+
+      copyEndpointBtn.addEventListener('click', () => {
+        const urlText = endpointUrl.textContent.replace(/^Your endpoint URL:\s*/, '').trim();
+        if (!urlText) {
+          alert('No endpoint URL to copy');
+          return;
+        }
+
+        navigator.clipboard.writeText(urlText).then(() => {
+          copyEndpointBtn.textContent = 'Copied!';
+          copyEndpointBtn.disabled = true;
+          setTimeout(() => {
+            copyEndpointBtn.textContent = 'Copy';
+            copyEndpointBtn.disabled = false;
+          }, 2000);
+        }).catch(() => {
+          alert('Failed to copy to clipboard');
+        });
+      });
+
+      socket.on('init_requests', (reqs) => {
+        allRequests = reqs.slice();
+        renderFilteredRequests();
+      });
+
+      socket.on('new_request', (req) => {
+        allRequests.unshift(req);
+        renderFilteredRequests();
+      });
+
+      socket.on('error', (msg) => alert(msg));
+
+      filterInput.addEventListener('input', () => {
+        renderFilteredRequests();
+      });
+
+      // Load endpoints list on start
+      loadEndpoints();
+    })();
   </script>
 </body>
 </html>

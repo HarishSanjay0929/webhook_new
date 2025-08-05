@@ -1,8 +1,11 @@
+require('dotenv').config();
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,58 +15,145 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// In-memory storage of endpoints and requests
-// { endpointId: [ { method, headers, body, query, timestamp } ] }
-const endpoints = {};
+const mongoUri = process.env.MONGO_URI;
+const dbName = 'webhookReceiverDB'; // Choose any name you want
 
-// Route to create new endpoint IDs
-app.get('/new', (req, res) => {
+let db;
+let endpointsCollection;
+let requestsCollection;
+
+// Connect to MongoDB Atlas
+async function connectMongo() {
+  const client = new MongoClient(mongoUri);
+  await client.connect();
+  db = client.db(dbName);
+  endpointsCollection = db.collection('endpoints');
+  requestsCollection = db.collection('requests');
+  console.log('Connected to MongoDB Atlas');
+}
+
+// Create a new endpoint
+app.get('/new', async (req, res) => {
   const id = uuidv4();
-  endpoints[id] = [];
-  res.json({ url: `${req.protocol}://${req.get('host')}/${id}`, id });
+  try {
+    await endpointsCollection.insertOne({
+      _id: id,
+      createdAt: new Date()
+    });
+    res.json({
+      url: `${req.protocol}://${req.get('host')}/${id}`,
+      id
+    });
+  } catch (err) {
+    console.error('Error creating endpoint:', err);
+    res.status(500).json({ error: 'Failed to create endpoint.' });
+  }
 });
 
-// Catch all methods for dynamic endpoints
-app.all('/:id', (req, res) => {
+// List all created endpoints for your frontend endpoint list
+app.get('/endpoints', async (req, res) => {
+  try {
+    const endpoints = await endpointsCollection
+      .find({})
+      .sort({ createdAt: -1 })
+      .project({ _id: 1, createdAt: 1 })
+      .toArray();
+
+    res.json(
+      endpoints.map(ep => ({
+        id: ep._id,
+        createdAt: ep.createdAt.toISOString()
+      }))
+    );
+  } catch (err) {
+    console.error('Error fetching endpoints:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Delete an endpoint and its requests
+app.delete('/endpoints/:id', async (req, res) => {
+  const endpointId = req.params.id;
+  try {
+    await endpointsCollection.deleteOne({ _id: endpointId });
+    await requestsCollection.deleteMany({ endpointId }); // remove related requests
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error deleting endpoint:', err);
+    res.status(500).json({ error: 'Failed to delete endpoint.' });
+  }
+});
+
+// Catch all webhook requests to dynamic endpoints
+app.all('/:id', async (req, res) => {
   const { id } = req.params;
 
-  if (!endpoints[id]) {
-    return res.status(404).send('Endpoint not found');
+  try {
+    const endpointExists = await endpointsCollection.findOne({ _id: id });
+    if (!endpointExists) {
+      return res.status(404).send('Endpoint not found');
+    }
+
+    const data = {
+      endpointId: id,
+      method: req.method,
+      headers: req.headers,
+      body: req.body,
+      query: req.query,
+      timestamp: new Date()
+    };
+
+    await requestsCollection.insertOne(data);
+
+    io.to(id).emit('new_request', {
+      method: data.method,
+      headers: data.headers,
+      body: data.body,
+      query: data.query,
+      timestamp: data.timestamp.toISOString()
+    });
+
+    res.status(200).send('Received');
+  } catch (err) {
+    console.error('Error handling webhook request:', err);
+    res.status(500).send('Internal Server Error');
   }
-
-  const data = {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    query: req.query,
-    timestamp: new Date().toISOString()
-  };
-
-  // Store request
-  endpoints[id].push(data);
-
-  // Emit to websocket that a new request was received
-  io.to(id).emit('new_request', data);
-
-  // Send generic response
-  res.status(200).send('Received');
 });
 
-// Serve static files (web UI)
+// Serve static frontend files (assumes your UI files are in 'public' folder)
 app.use(express.static('public'));
 
-// Websocket connection to send real-time updates to UI
+// Socket.IO connection handling
 io.on('connection', (socket) => {
   console.log('Client connected');
 
-  // Client joins a room with the endpoint id they want to monitor
-  socket.on('join', (endpointId) => {
-    if (endpoints[endpointId]) {
+  socket.on('join', async (endpointId) => {
+    try {
+      const endpointExists = await endpointsCollection.findOne({ _id: endpointId });
+      if (!endpointExists) {
+        socket.emit('error', 'Endpoint not found');
+        return;
+      }
       socket.join(endpointId);
-      // Send existing requests to client
-      socket.emit('init_requests', endpoints[endpointId]);
-    } else {
-      socket.emit('error', 'Endpoint not found');
+
+      const recentRequests = await requestsCollection
+        .find({ endpointId })
+        .sort({ timestamp: -1 })
+        .limit(100)
+        .toArray();
+
+      const formattedRequests = recentRequests.map(r => ({
+        method: r.method,
+        headers: r.headers,
+        body: r.body,
+        query: r.query,
+        timestamp: r.timestamp.toISOString()
+      }));
+
+      socket.emit('init_requests', formattedRequests);
+    } catch (err) {
+      console.error('Error during socket join:', err);
+      socket.emit('error', 'Internal server error');
     }
   });
 
@@ -72,7 +162,15 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+// Start server after connecting to MongoDB
+connectMongo()
+  .then(() => {
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () => {
+      console.log(`Server started on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to connect to MongoDB Atlas:', error);
+    process.exit(1);
+  });

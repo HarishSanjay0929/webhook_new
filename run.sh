@@ -1,1 +1,1 @@
-npm install express socket.io cors uuid
+npm install express socket.io cors uuid mongodb dotenv
