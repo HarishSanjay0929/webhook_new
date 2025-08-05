@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Webhook Receiver</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
+    #requests { margin-top: 20px; }
+    pre { background: #222; color: #eee; padding: 10px; overflow: auto; }
+    #endpointInput { width: 300px; }
+  </style>
+</head>
+<body>
+  <h1>Webhook Receiver</h1>
+
+  <button id="newEndpointBtn">Create New Endpoint</button>
+  <div>
+    <input id="endpointInput" placeholder="Enter your endpoint ID here" />
+    <button id="connectBtn">Connect</button>
+  </div>
+
+  <h2 id="endpointUrl"></h2>
+
+  <div id="requests"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const newEndpointBtn = document.getElementById('newEndpointBtn');
+    const connectBtn = document.getElementById('connectBtn');
+    const endpointInput = document.getElementById('endpointInput');
+    const endpointUrl = document.getElementById('endpointUrl');
+    const requestsDiv = document.getElementById('requests');
+    let currentEndpoint = null;
+
+    function renderRequest(req, index) {
+      return `<h3>Request ${index + 1} - ${req.method} @${req.timestamp}</h3>
+      <b>Query Parameters:</b>
+      <pre>${JSON.stringify(req.query, null, 2)}</pre>
+      <b>Headers:</b>
+      <pre>${JSON.stringify(req.headers, null, 2)}</pre>
+      <b>Body:</b>
+      <pre>${JSON.stringify(req.body, null, 2)}</pre><hr>`;
+    }
+
+    function addRequest(req) {
+      const html = renderRequest(req, requestsDiv.children.length);
+      requestsDiv.innerHTML = html + requestsDiv.innerHTML;
+    }
+
+    newEndpointBtn.onclick = async () => {
+      const res = await fetch('/new');
+      const data = await res.json();
+      currentEndpoint = data.id;
+      endpointInput.value = currentEndpoint;
+      endpointUrl.textContent = `Your endpoint URL: ${data.url}`;
+      requestsDiv.innerHTML = '';
+      socket.emit('join', currentEndpoint);
+    };
+
+    connectBtn.onclick = () => {
+      const id = endpointInput.value.trim();
+      if (!id) return alert('Please enter an endpoint ID');
+      currentEndpoint = id;
+      endpointUrl.textContent = `Your endpoint URL: ${location.protocol}//${location.host}/${id}`;
+      requestsDiv.innerHTML = '';
+      socket.emit('join', currentEndpoint);
+    };
+
+    socket.on('init_requests', (reqs) => {
+      requestsDiv.innerHTML = '';
+      reqs.slice().reverse().forEach(addRequest);
+    });
+
+    socket.on('new_request', (req) => {
+      addRequest(req);
+    });
+
+    socket.on('error', (msg) => {
+      alert(msg);
+    });
+  </script>
+</body>
+</html>
