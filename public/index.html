@@ -234,7 +234,6 @@
       word-break: break-all;
     }
 
-
     /* ==== CUSTOM SCROLLBAR STYLES ==== */
     .sidebar,
     #endpointList,
@@ -345,6 +344,39 @@
       outline: none;
       border-color: var(--color-primary);
       box-shadow: 0 0 10px var(--color-primary);
+    }
+
+    /* Google Sign-In button container styling */
+    #g_id_signin {
+      margin-bottom: 15px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    /* User info and logout button styles */
+    #userInfo {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    #userEmail {
+      font-weight: 700;
+      word-break: break-word;
+      user-select: text;
+    }
+    #logoutBtn {
+      background-color: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: 700;
+    }
+    #logoutBtn:hover {
+      background-color: #dc2626;
     }
 
     table {
@@ -553,6 +585,9 @@
       }
     }
   </style>
+
+  <!-- Google Identity Services script -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
   <header>
@@ -560,7 +595,17 @@
   </header>
 
   <aside class="sidebar" role="complementary" aria-label="Endpoint controls">
-    <button id="newEndpointBtn" aria-label="Create a new endpoint">Create New Endpoint</button>
+
+    <!-- Google Sign-In button container -->
+    <div id="g_id_signin"></div>
+
+    <!-- User info and logout button -->
+    <div id="userInfo">
+      <div id="userEmail"></div>
+      <button id="logoutBtn" aria-label="Logout from your account">Logout</button>
+    </div>
+
+    <button id="newEndpointBtn" aria-label="Create a new endpoint" disabled>Create New Endpoint</button>
     <input id="endpointInput" type="text" aria-label="Enter or paste endpoint ID" placeholder="Enter your endpoint ID here" />
     <button id="connectBtn" aria-label="Connect to the entered endpoint">Connect</button>
     
@@ -589,6 +634,8 @@
   <script>
     (function() {
       const socket = io();
+
+      // Elements
       const newEndpointBtn = document.getElementById('newEndpointBtn');
       const connectBtn = document.getElementById('connectBtn');
       const endpointInput = document.getElementById('endpointInput');
@@ -598,16 +645,26 @@
       const filterInput = document.getElementById('filterInput');
       const endpointListEl = document.getElementById('endpointList');
 
+      // Auth UI elements
+      const gSignInDiv = document.getElementById('g_id_signin');
+      const userInfoDiv = document.getElementById('userInfo');
+      const userEmailDiv = document.getElementById('userEmail');
+      const logoutBtn = document.getElementById('logoutBtn');
+
       let currentEndpoint = null;
       let allRequests = [];
       let endpoints = []; // array of {id, createdAt}
+      let authToken = null;
+      let currentUser = null;
 
+      // Format timestamp helper
       function formatTimestamp(iso) {
         const dt = new Date(iso);
         if (isNaN(dt)) return iso;
         return dt.toLocaleString();
       }
 
+      // Method badge creation
       function createMethodBadge(method) {
         const methodUpper = (method || '').toUpperCase();
         const valid = ['GET','POST','PUT','DELETE','PATCH'].includes(methodUpper) ? methodUpper : 'OTHER';
@@ -618,6 +675,7 @@
         return span;
       }
 
+      // Render single request row
       function renderRequestRow(req, index) {
         const tr = document.createElement('tr');
 
@@ -658,6 +716,7 @@
         return tr;
       }
 
+      // Render table of requests
       function renderTable(requests) {
         if (!requests || requests.length === 0) {
           requestsDiv.innerHTML = `
@@ -689,6 +748,7 @@
         requestsDiv.appendChild(table);
       }
 
+      // Filter displayed requests by method, timestamp, or body content
       function renderFilteredRequests() {
         const filter = filterInput.value.trim().toLowerCase();
         let filtered = allRequests;
@@ -704,9 +764,16 @@
         renderTable(filtered);
       }
 
+      // Load endpoints with authentication token
       async function loadEndpoints() {
+        if (!authToken) return;
         try {
-          const response = await fetch('/endpoints');
+          const response = await fetch('/endpoints', {
+            headers: {
+              'Authorization': `Bearer ${authToken}`
+            }
+          });
+          if (!response.ok) throw new Error('Failed to load endpoints');
           const data = await response.json();
           endpoints = data;
 
@@ -734,7 +801,10 @@
               e.stopPropagation();
               if (confirm('Are you sure you want to delete this endpoint and all its requests?')) {
                 try {
-                  const res = await fetch(`/endpoints/${ep.id}`, { method: 'DELETE' });
+                  const res = await fetch(`/endpoints/${ep.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                  });
                   if (!res.ok) throw new Error('Failed to delete endpoint');
                   await loadEndpoints();
                   if (currentEndpoint === ep.id) {
@@ -767,6 +837,7 @@
         }
       }
 
+      // Select and join endpoint room
       function selectEndpoint(id) {
         if (currentEndpoint === id) return;
 
@@ -784,9 +855,17 @@
         });
       }
 
+      // Create new endpoint; protected route
       newEndpointBtn.onclick = async () => {
+        if (!authToken) {
+          alert('Please sign in to create a new endpoint.');
+          return;
+        }
         try {
-          const res = await fetch('/new');
+          const res = await fetch('/new', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (!res.ok) throw new Error('Failed to create new endpoint');
           const data = await res.json();
           await loadEndpoints();
           selectEndpoint(data.id);
@@ -795,12 +874,14 @@
         }
       };
 
+      // Connect to endpoint by ID
       connectBtn.onclick = () => {
         const id = endpointInput.value.trim();
         if (!id) return alert('Please enter an endpoint ID');
         selectEndpoint(id);
       };
 
+      // Copy endpoint URL to clipboard
       copyEndpointBtn.addEventListener('click', () => {
         const urlText = endpointUrl.textContent.replace(/^Your endpoint URL:\s*/, '').trim();
         if (!urlText) {
@@ -820,6 +901,7 @@
         });
       });
 
+      // Socket.IO event listeners
       socket.on('init_requests', (reqs) => {
         allRequests = reqs.slice();
         renderFilteredRequests();
@@ -836,8 +918,110 @@
         renderFilteredRequests();
       });
 
-      // Load endpoints list on start
-      loadEndpoints();
+      // Google Sign-In Setup
+
+      // Called when Google returns credential response after signin
+      async function handleCredentialResponse(response) {
+        const token = response.credential;
+        if (!token) {
+          alert('Google sign-in failed: no token received');
+          return;
+        }
+
+        try {
+          // Send token to backend for verification
+          const res = await fetch('/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+          });
+
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || 'Google authentication failed');
+          }
+
+          const data = await res.json();
+          authToken = token;  // Store Google ID token for auth in all requests
+          currentUser = data.user;
+
+          updateUIOnSignIn();
+          await loadEndpoints();
+        } catch (err) {
+          alert('Authentication error: ' + err.message);
+          googleLogout();
+        }
+      }
+
+      // Initialize Google Sign-In button
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com', // Replace with your actual client ID
+          callback: handleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+
+        google.accounts.id.renderButton(
+          gSignInDiv,
+          { theme: 'outline', size: 'large', width: '100%', locale: 'en' }
+        );
+
+        google.accounts.id.prompt(); // Display the One Tap prompt if eligible
+
+        checkStoredSession();
+      };
+
+      // Update UI when signed in
+      function updateUIOnSignIn() {
+        gSignInDiv.style.display = 'none';
+        userInfoDiv.style.display = 'flex';
+        userEmailDiv.textContent = currentUser.email || 'Logged in user';
+        newEndpointBtn.disabled = false;
+      }
+
+      // Update UI when signed out
+      function updateUIOnSignOut() {
+        gSignInDiv.style.display = 'block';
+        userInfoDiv.style.display = 'none';
+        userEmailDiv.textContent = '';
+        newEndpointBtn.disabled = true;
+
+        // Clear data
+        currentEndpoint = null;
+        endpointInput.value = '';
+        endpointUrl.textContent = '';
+        copyEndpointBtn.disabled = true;
+        allRequests = [];
+        renderTable(allRequests);
+        endpointListEl.innerHTML = '';
+      }
+
+      // Handle logout
+      logoutBtn.onclick = () => {
+        googleLogout();
+      };
+
+      // Clear token and UI state on logout
+      function googleLogout() {
+        authToken = null;
+        currentUser = null;
+        updateUIOnSignOut();
+        // Also inform Google to revoke token if desired (optional)
+        google.accounts.id.disableAutoSelect();
+      }
+
+      // Load user session from token if stored
+      function checkStoredSession() {
+        // For simplicity, no token persistence is implemented here.
+        // You can extend this with localStorage/sessionStorage if wanted.
+        // On page load, user must sign in again.
+        updateUIOnSignOut();
+      }
+
+      // Load the endpoints initially if logged in
+      // (This happens in handleCredentialResponse after sign-in)
+
     })();
   </script>
 </body>

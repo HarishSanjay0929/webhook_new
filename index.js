@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,6 +23,8 @@ let db;
 let endpointsCollection;
 let requestsCollection;
 
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 // Connect to MongoDB Atlas
 async function connectMongo() {
   const client = new MongoClient(mongoUri);
@@ -32,13 +35,60 @@ async function connectMongo() {
   console.log('Connected to MongoDB Atlas');
 }
 
-// Create a new endpoint
-app.get('/new', async (req, res) => {
+// Google Authentication route
+app.post('/auth/google', async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ error: 'Token is required' });
+  }
+  try {
+    // Verify Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    // Optional: Find or create user in your database here
+    // Example: const user = await usersCollection.findOne({ googleId: payload.sub });
+
+    // Return user info and success message
+    res.json({ success: true, user: payload });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(401).json({ error: 'Invalid Google ID token' });
+  }
+});
+
+// Middleware to protect routes
+async function authenticateGoogleToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).send('Unauthorized: No token provided');
+
+  const token = authHeader.split(' ')[1];
+  if (!token) return res.status(401).send('Unauthorized: Invalid token format');
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    req.user = ticket.getPayload();
+    next();
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    res.status(401).send('Unauthorized: Invalid token');
+  }
+}
+
+// Example: Protect your /new endpoint with authentication if you want
+app.get('/new', authenticateGoogleToken, async (req, res) => {
   const id = uuidv4();
   try {
     await endpointsCollection.insertOne({
       _id: id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      createdBy: req.user.email // Optionally save creator info
     });
     res.json({
       url: `${req.protocol}://${req.get('host')}/${id}`,
@@ -51,18 +101,20 @@ app.get('/new', async (req, res) => {
 });
 
 // List all created endpoints for your frontend endpoint list
-app.get('/endpoints', async (req, res) => {
+// You can also protect this route if needed
+app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   try {
     const endpoints = await endpointsCollection
       .find({})
       .sort({ createdAt: -1 })
-      .project({ _id: 1, createdAt: 1 })
+      .project({ _id: 1, createdAt: 1, createdBy: 1 })
       .toArray();
 
     res.json(
       endpoints.map(ep => ({
         id: ep._id,
-        createdAt: ep.createdAt.toISOString()
+        createdAt: ep.createdAt.toISOString(),
+        createdBy: ep.createdBy || null
       }))
     );
   } catch (err) {
@@ -71,8 +123,8 @@ app.get('/endpoints', async (req, res) => {
   }
 });
 
-// Delete an endpoint and its requests
-app.delete('/endpoints/:id', async (req, res) => {
+// Delete an endpoint and its requests (protected route)
+app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   const endpointId = req.params.id;
   try {
     await endpointsCollection.deleteOne({ _id: endpointId });
@@ -84,7 +136,7 @@ app.delete('/endpoints/:id', async (req, res) => {
   }
 });
 
-// Catch all webhook requests to dynamic endpoints
+// Catch all webhook requests to dynamic endpoints (public access)
 app.all('/:id', async (req, res) => {
   const { id } = req.params;
 
