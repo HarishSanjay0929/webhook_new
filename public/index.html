@@ -2,930 +2,765 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Webhook Receiver - Endpoints List Enhanced UI</title>
+  <title>Webhook Receiver (webhook.site-style layout)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
-      --color-bg: #f5f7fa;
-      --color-card: #ffffff;
-      --color-text: #2c3e50;
-      --color-primary: #3b82f6;
-      --color-primary-dark: #2563eb;
-      --color-error: #ef4444;
-      --color-success: #10b981;
-      --color-badge-get: #22c55e;
-      --color-badge-post: #3b82f6;
-      --color-badge-put: #f59e0b;
-      --color-badge-delete: #ef4444;
-      --scrollbar-thumb: rgba(44, 62, 80, 0.25);
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      --transition: 0.2s ease;
-      --border-radius: 8px;
-      --shadow-soft: 0 4px 12px rgba(0,0,0,0.05);
-      --shadow-hover: 0 8px 24px rgba(0,0,0,0.1);
-      --border-thick: 1.5px solid #2563eb;
-      --border-normal: 1.5px solid #bfcdf7;
-      --header-height: 64px;
+      --sidebar-bg: #26314F;
+      --sidebar-text: #fff;
+      --primary: #1976d2;
+      --primary-dark: #0d47a1;
+      --card-bg: #fff;
+      --border-radius: 9px;
+      --shadow: 0 2px 10px rgba(5,10,30,0.05);
+      --font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    *, *::before, *::after { box-sizing: border-box; }
     html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: var(--font-family);
-      background: var(--color-bg);
-      color: var(--color-text);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      scroll-behavior: smooth;
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
     }
     body {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      grid-template-rows: var(--header-height) 1fr 48px;
-      grid-template-areas:
-        "header header"
-        "sidebar main"
-        "footer footer";
-      height: 100vh;
+      box-sizing: border-box;
+      font-family: var(--font);
+      background: #f4f7fe;
+      min-height: 100vh;
+      width: 100vw;
       overflow: hidden;
     }
-    header {
-      grid-area: header;
-      background-color: var(--color-primary);
-      color: #fff;
-      font-weight: 700;
-      font-size: 1.5rem;
-      letter-spacing: 0.05em;
+    .layout {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 24px;
-      user-select: none;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      box-shadow: var(--shadow-soft);
-    }
-    footer {
-      grid-area: footer;
-      background-color: var(--color-primary);
-      color: #fff;
-      font-size: 0.9rem;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
-      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+      height: 100vh;
+      width: 100vw;
+      min-width: 0;
     }
     .sidebar {
-      grid-area: sidebar;
-      background-color: var(--color-card);
-      padding: 24px 24px 30px 24px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      width: 330px;
+      min-width: 230px;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-      border-right: 1px solid #e0e7ff;
-      box-shadow: inset -1px 0 0 #e0e7ff;
+      padding: 0;
+      box-shadow: 2px 0 12px #0002;
+      height: 100%;
     }
-    #endpointListContainer {
-      order: 1;
-      border: 1.5px solid #cbdde5;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-soft);
-      background-color: #fff;
-      max-height: 320px;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    #endpointListContainer > h3 {
-      margin: 8px 12px;
+    .sidebar-header {
+      padding: 1.5rem 1.3rem;
+      font-size: 1.36rem;
       font-weight: 700;
-      font-size: 1.1rem;
-      background: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      border-bottom: 1.5px solid #d1d5db;
+      letter-spacing: 0.01em;
+      background: #212c47;
+      border-bottom: 1.5px solid #233;
       user-select: none;
     }
-    #endpointList {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      font-size: 0.9rem;
-      max-height: 320px;
+    .sidebar-main {
+      flex: 1;
       overflow-y: auto;
+      padding: 22px 18px 20px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .sidebar-main h3 {
+      font-weight: 500;
+      margin-bottom: 13px;
+      margin-top: 2px;
+      color: #b8ddff;
+    }
+    #endpointList {
+      list-style: none;
+      margin: 0;
+      padding: 0 0 6px 0;
+      border-radius: 6px;
+      background: #283d62;
+      box-shadow: var(--shadow);
+      max-height: 240px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      font-size: 0.92rem;
     }
     #endpointList li {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 14px 10px 14px;
-      border-bottom: 1.5px solid #d5d9e0;
+      gap: 5px;
+      padding: 4px 6px 4px 4px;
+      border-bottom: 1px solid #2c4265;
+      color: #dbeaff;
       cursor: pointer;
-      user-select: none;
-      transition: background-color var(--transition);
-      position: relative;
+      transition: background .15s;
+      font-size: 0.88em;
+      line-height: 1.2;
+      max-width: 100%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      min-height: 28px;
     }
-    #endpointList li > span.endpoint-name {
-      flex: 1;
-      user-select: text;
-      overflow-wrap: anywhere;
-    }
-    #endpointList li > div.actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-    #endpointList li:hover,
-    #endpointList li:focus {
-      background-color: #c4d8ff;
-      outline: none;
-      color: var(--color-primary-dark);
-    }
-    #endpointList li:last-child { border-bottom: none; }
-    #endpointList li[aria-selected="true"] {
-      background-color: var(--color-primary);
+    #endpointList li.selected {
+      background: #1452bb;
       color: #fff;
       font-weight: 700;
     }
-    .delete-endpoint-btn {
-      background-color: var(--color-error);
-      color: white;
+    #endpointList li:last-child { border-bottom: none;}
+    #endpointList li .list-label {
+      flex: 1 1 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+      color: inherit;
+      min-width: 0;
+      padding-right: 5px;
+      cursor: default;
+    }
+    .endpoint-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+    .endpoint-actions button {
+      background-color: #f44336;
       border: none;
+      color: #fff;
+      font-size: 0.85em; /* smaller font */
+      font-weight: 600;
       border-radius: 5px;
-      padding: 5px 14px;
-      font-weight: 700;
+      padding: 2px 6px;  /* less padding */
       cursor: pointer;
-      min-width: 85px;
-      max-width: 100px;
-      user-select: none;
-      transition: background-color var(--transition);
+      min-width: 0;
+      max-width: 50px;   /* narrower max width */
     }
-    .delete-endpoint-btn:hover { background-color: #d32f2f; }
-    .info-icon {
-      font-style: normal;
-      color: var(--color-primary-dark);
-      background-color: #dbeafe;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-      text-align: center;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      flex-shrink: 0;
-    }
-    #g_idsignin-container { order: 2; margin-top: 10px; width: 100%; }
-    #g_idsignin { width: 100% !important; display: block !important; min-height: 40px; user-select: none; }
-    #newEndpointBtn {
-      order: 3;
-      background-color: var(--color-primary);
-      color: white;
-      border: none;
-      padding: 14px 22px;
-      font-weight: 700;
-      cursor: pointer;
+    .endpoint-actions button:hover { background-color: #b71c1c; }
+    .sidebar button, .sidebar input[type=button] {
+      margin-top: 18px;
+      margin-bottom: 20px;
       width: 100%;
-      user-select: none;
-      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-soft);
-      transition: background-color var(--transition), box-shadow var(--transition);
-      margin-top: 16px;
-      flex-shrink: 0;
+      font-size: 1.07rem;
+      font-weight: 700;
+      padding: 14px 0;
+      border: none;
+      border-radius: 6px;
+      background: #48aaff;
+      color: #fff;
+      cursor: pointer;
+      transition: background .2s;
+      box-shadow: 0 4px 22px #0054a20a;
     }
-    #newEndpointBtn:disabled {
-      background-color: #9ca3af;
-      cursor: not-allowed;
-      box-shadow: none;
+    .sidebar button:disabled {
+      background: #3e4d67;
+      color: #aaa;
+      cursor: default;
     }
-    #newEndpointBtn:hover:not(:disabled) {
-      background-color: var(--color-primary-dark);
-      box-shadow: var(--shadow-hover);
+    .sidebar button:not(:disabled):hover { background: var(--primary-dark);}
+    #g_idsignin-container {
+      margin-bottom: 30px;
     }
     #userInfo {
-      order: 4;
+      background: #243b54;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 7px;
+      margin-top: auto; /* push user info to the bottom */
+      font-size: 0.95rem;
       display: none;
       flex-direction: column;
-      gap: 5px;
-      margin-top: 16px;
-      max-width: 320px;
-      word-break: break-word;
-      white-space: normal;
+      max-width: 100%;
+      min-width: 0;
     }
     #userEmail {
       font-weight: 700;
-      word-break: break-word;
-      white-space: normal;
-      font-size: 0.95rem;
-      line-height: 1.3;
-      color: var(--color-text);
-      user-select: text;
+      line-height: 1.18;
+      margin-bottom: 8px;
+      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 95%;
+      min-width: 0;
+      cursor: pointer;
     }
     #logoutBtn {
-      background-color: var(--color-error);
-      border: none;
+      background-color: #f44336;
       color: white;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 100%;
+      border: none;
+      padding: 7px 13px;
+      font-size: 1rem;
       font-weight: 700;
-      user-select: none;
-      transition: background-color var(--transition);
-      margin-top: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 0;
+      margin-bottom: 4px;
+      align-self: flex-start;
+      max-width: 120px;
     }
-    #logoutBtn:hover { background-color: #d32f2f; }
-    .main {
-      grid-area: main;
-      padding: 30px 24px;
-      overflow-y: auto;
-      background-color: var(--color-bg);
-      overflow-x: hidden !important;
-    }
-    #endpointContainer {
+    #logoutBtn:hover { background: #b71c1c; }
+    .main-area {
+      flex: 1;
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 20px;
+      flex-direction: column;
+      padding: 0;
+      height: 100vh;
+      background: #f3f5fa;
+      min-width: 0;
+    }
+    .main-inner-content {
+      padding: 22px 38px 10px 38px;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      overflow-y: auto;
+      flex: 1;
+      box-sizing: border-box;
+    }
+    .endpoint-url-row {
+      display: flex;
       align-items: center;
+      gap: 17px;
+      width: 100%;
+      min-width: 0;
     }
     #endpointUrl {
-      background-color: #dbeafe;
-      border: 2px solid var(--color-primary);
-      border-radius: var(--border-radius);
-      color: var(--color-primary-dark);
-      font-weight: 700;
-      font-size: 1rem;
-      padding: 12px 18px;
-      user-select: all;
-      cursor: text;
       flex-grow: 1;
-      min-width: 0;
-      box-shadow: var(--shadow-soft);
-      transition: box-shadow var(--transition);
+      background: #e2f2fd;
+      border: 2.1px solid var(--primary);
+      border-radius: 8px;
+      color: #1469d5;
+      font-weight: 700;
+      font-size: 1.04rem;
+      padding: 10px 14px;
+      user-select: all;
+      letter-spacing: 0.018em;
+      word-break: break-all;
+      min-width: 50px;
+      width: 100%;
+      transition: box-shadow .2s;
     }
-    #endpointUrl:hover { box-shadow: var(--shadow-hover); }
     #copyEndpointBtn {
-      background-color: var(--color-primary);
+      background: var(--primary);
       border: none;
-      border-radius: var(--border-radius);
+      border-radius: 7px;
       color: white;
       font-weight: 700;
       font-size: 1rem;
-      padding: 12px 24px;
+      padding: 13px 28px;
       cursor: pointer;
-      user-select: none;
-      flex-shrink: 0;
-      box-shadow: var(--shadow-soft);
-      transition: background-color var(--transition), box-shadow var(--transition);
-      white-space: nowrap;
-    }
-    #copyEndpointBtn:hover:enabled {
-      background-color: var(--color-primary-dark);
-      box-shadow: var(--shadow-hover);
+      transition: background 0.2s;
+      box-shadow: 0 0 10px #2067c620;
     }
     #copyEndpointBtn:disabled {
-      background-color: #9ca3af;
+      background-color: #bbb;
       cursor: default;
-      box-shadow: none;
     }
-    .requests-container { position: relative; max-height: 60vh; overflow: visible; }
-    .requests-scroll {
-      max-height: 60vh;
-      overflow-y: auto;
-      border-radius: var(--border-radius);
-      overflow-x: hidden !important;
+    #copyEndpointBtn:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+    .toggle-details-btn {
+      background: var(--primary);
+      color: white;
+      font-weight: 700;
+      font-size: 1.04rem;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      margin: 8px 0;
+      align-self: flex-start;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle-details-btn[aria-pressed="true"]{ background: var(--primary-dark);}
+    .toggle-details-btn:hover { background: var(--primary-dark);}
+    .requests-table-container {
+      width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+      max-height: 70vh;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid #d5e1fa;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      display: block;
     }
     table {
       width: 100%;
+      min-width: 0;
+      max-width: 100%;
       border-collapse: collapse;
-      box-shadow: var(--shadow-soft);
-      border: var(--border-thick);
-      font-size: 1rem;
-      position: relative;
       table-layout: fixed;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      overflow-x: hidden;
+      font-size: 1rem;
     }
     thead {
+      background: #e4f1ff;
+      color: #135493;
+      font-size: 1.10em;
+      font-weight: 700;
       position: sticky;
       top: 0;
-      background-color: var(--color-primary);
-      color: black;
-      font-weight: 600;
-      z-index: 10;
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      z-index: 9;
     }
     th, td {
-      border: var(--border-normal);
-      padding: 16px 20px;
-      vertical-align: middle;
-      background-color: white;
-      white-space: normal;
+      border: 1px solid #dbe5ef;
+      padding: 10px 8px;
+      vertical-align: top;
       word-break: break-word;
-      min-width: 0 !important;
-      max-width: 100% !important;
+      overflow-wrap: break-word;
+      background: #fff;
+      min-width: 0;
+      max-width: 100vw;
+      box-sizing: border-box;
     }
     th:first-child, td:first-child {
-      width: 80px;
-      max-width: 90px;
-      min-width: 60px;
+      width: 82px;
       text-align: center;
     }
-    th:last-child, td:last-child { width: auto; min-width: 400px; }
-    tbody tr:hover { background-color: #dbeafe; }
-    table tr:first-child th:first-child { border-top-left-radius: var(--border-radius); }
-    table tr:first-child th:last-child { border-top-right-radius: var(--border-radius); }
-    table tr:last-child td:first-child { border-bottom-left-radius: var(--border-radius); }
-    table tr:last-child td:last-child { border-bottom-right-radius: var(--border-radius); }
+    tbody tr:hover { background: #e3f3fc; }
     .method-badge {
       display: inline-block;
-      background-color: var(--color-primary);
+      background: var(--primary);
       color: white;
-      font-weight: 600;
-      font-size: 0.8rem;
+      font-weight: 700;
+      font-size: .82rem;
       text-transform: uppercase;
       border-radius: 100px;
-      padding: 3px 10px;
+      padding: 3px 12px;
       margin-left: 8px;
       user-select: none;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      position: relative;
-      transition: background-color var(--transition);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.10);
     }
-    .method-badge.GET { background-color: var(--color-badge-get); }
-    .method-badge.POST { background-color: var(--color-badge-post);}
-    .method-badge.PUT { background-color: var(--color-badge-put);}
-    .method-badge.DELETE { background-color: var(--color-badge-delete);}
-    .method-badge.PATCH { background-color: #8b5cf6;}
-    .method-badge:hover::after {
-      content: attr(title);
-      position: absolute;
-      top: -30px; left: 50%;
-      transform: translateX(-50%);
-      background-color: #162d6b;
-      padding: 4px 10px;
-      border-radius: var(--border-radius);
-      font-size: 0.75rem;
-      white-space: nowrap;
-      color: white;
-      user-select: none;
-      pointer-events: none;
-      opacity: 0.95;
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
+    .method-badge.GET { background: #13b772;}
+    .method-badge.POST { background: #217bee;}
+    .method-badge.PUT { background: #ffba39;}
+    .method-badge.DELETE { background: #ef5350;}
+    .method-badge.PATCH { background: #8b5cf6;}
+    .method-badge.OTHER { background: #607d8b;}
     details {
-      border: 1px solid #ccc;
-      background-color: #f4f6fa;
-      border-radius: var(--border-radius);
-      margin-top: 10px;
-      box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
+      border: 1px solid #c3cfec;
+      background: #f4f8ff;
+      border-radius: 7px;
+      margin-top: 7px;
+      margin-bottom: 6px;
+      box-shadow: 0 0 4px #a4bbf829;
     }
     summary {
       font-weight: 700;
-      padding: 12px 20px;
+      padding: 11px 17px;
       cursor: pointer;
       user-select: none;
-      font-size: 1.05rem;
-      border-radius: var(--border-radius) var(--border-radius) 0 0;
-      color: var(--color-primary-dark);
-      outline: none;
+      font-size: 1.02rem;
+      color: #1369a8;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
+      outline: none;
     }
     summary::-webkit-details-marker { display: none; }
-    details[open] summary { color: var(--color-primary); }
-    details[open] {
-      border-color: var(--color-primary);
-      background-color: #e1eefe;
-    }
+    details[open]{ border-color: #1d1354; }
+    details[open] summary { color: var(--primary); }
     pre {
       margin: 0;
-      padding: 14px 20px;
+      padding: 12px 20px;
       font-family: 'Fira Mono', monospace;
-      font-size: 0.9rem;
-      background-color: #1e1e2f;
+      font-size: .93rem;
+      background-color: #22223c;
       color: #cddbff;
       white-space: pre-wrap;
-      max-height: 300px;
+      max-height: 280px;
       overflow-y: auto;
-      border-radius: 0 0 var(--border-radius) var(--border-radius);
-      border-top: 2px solid var(--color-primary);
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+      border-radius: 0 0 7px 7px;
+      border-top: 2px solid #94bcf2;
+      box-shadow: 0 1px 8px #5f8aff0c inset;
       user-select: text;
     }
-    pre::-webkit-scrollbar { height: 8px; width: 8px; }
-    pre::-webkit-scrollbar-thumb { background: #8a8ecc88; border-radius: 10px; }
-    .timestamp {
-      font-size: 0.8rem;
-      color: #7a7a95;
-      margin-top: 5px;
-      user-select: none;
-      display: block;
-    }
     .no-requests {
-      user-select: none;
       margin: 80px auto;
-      color: #9a9abb;
+      color: #7695be;
       text-align: center;
-      font-size: 1.3rem;
-      opacity: 0.7;
+      font-size: 1.18rem;
+      opacity: 0.73;
+      letter-spacing: 0.03em;
     }
-    .no-requests svg {
-      display: block;
-      margin: 0 auto 20px;
-      width: 56px;
-      height: 56px;
-      fill: #b3b3d1;
-      opacity: 0.6;
-    }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 16px; }
-    @media (max-width: 700px) {
-      body {
-        grid-template-columns: 1fr;
-        grid-template-rows: var(--header-height) auto auto 48px;
-        grid-template-areas:
-          "header"
-          "sidebar"
-          "main"
-          "footer";
+    @media (max-width: 900px) {
+      .main-inner-content {
+        padding: 16px 8px 8px 8px;
+        width: 100vw;
       }
-      .sidebar {
-        flex-direction: row;
-        overflow-x: auto;
-        padding: 12px 16px;
-        gap: 16px;
-        border-right: none;
-        border-bottom: 1px solid #e0e7ff;
-      }
-      .sidebar > * { flex: 1 1 auto; min-width: 0; }
-      #endpointListContainer { max-height: 160px; }
-      #endpointList { max-height: 160px; }
-      #endpointList li { min-width: 280px; }
-      table th, table td { font-size: 0.9rem; }
-      th:last-child, td:last-child { min-width: unset; width: auto; }
+      .sidebar { width: 196px; min-width: 120px;}
+      .sidebar-header, .sidebar-footer {padding: 0.7rem 0.9rem;}
+      .requests-table-container { padding: 0; }
     }
-    .endpoint-popover {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      min-width: 290px;
-      max-width: 95vw;
-      background: #fff;
-      color: #19192B;
-      border: 2px solid #2563eb;
-      border-radius: 12px;
-      box-shadow: 0 8px 40px rgba(37,99,235,0.15), 0 1px 12px rgba(0,0,0,0.10);
-      padding: 20px 28px 20px 28px;
-      font-size: 1rem;
-      font-family: inherit;
-      transition: opacity 0.13s;
-      opacity: 0;
-      left: 40px;
-      top: 40px;
-      pointer-events: none;
+    @media (max-width: 730px) {
+      .layout { flex-direction: column; height: auto; }
+      .sidebar { width: 100vw; max-width: none; min-width: unset; box-shadow: none;}
+      .main-inner-content { padding: 10px 2vw; }
+      .requests-table-container { padding: 0; }
     }
-    .endpoint-popover.show {
-      display: block !important;
-      opacity: 1;
-      animation: popfadein 0.14s;
-      pointer-events: auto;
-    }
-    @keyframes popfadein { from {opacity: 0;} to {opacity: 1;} }
-    .popover-close {
-      display: block;
-      position: absolute;
-      top: 12px;
-      right: 16px;
-      font-size: 1.3rem;
-      color: #999;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      width: 32px;
-      height: 32px;
-      line-height: 24px;
-    }
-    .popover-close:focus { outline: 2px solid #2563eb; }
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-
-  <header>Webhook Receiver</header>
-
-  <aside class="sidebar" role="complementary" aria-label="Endpoint controls">
-    <div id="endpointListContainer" aria-label="List of your endpoints">
-      <h3>Endpoints</h3>
-      <ul id="endpointList" role="listbox" tabindex="0" aria-multiselectable="false"></ul>
+<div class="layout">
+  <aside class="sidebar" aria-label="Sidebar">
+    <div class="sidebar-header">Webhook Receiver</div>
+    <div class="sidebar-main">
+      <button id="newEndpointBtn" disabled>Create New Endpoint</button>
+      <h3>Your Endpoints</h3>
+      <ul id="endpointList" tabindex="0" role="listbox"></ul>
+      <div id="g_idsignin-container" aria-label="Google Sign-in container">
+        <div id="g_idsignin" role="button" aria-label="Google Sign-in Button"></div>
+      </div>
+      <div id="userInfo" aria-live="polite" aria-atomic="true" aria-label="User information panel">
+        <div id="userEmail" tabindex="0" title=""></div>
+        <button id="logoutBtn" aria-label="Logout from your account">Logout</button>
+      </div>
     </div>
-    <div id="g_idsignin-container">
-      <div id="g_idsignin" aria-label="Google Sign-in Button" role="button"></div>
-    </div>
-    <button id="newEndpointBtn" disabled>Create New Endpoint</button>
-    <div id="userInfo" aria-live="polite" aria-atomic="true" aria-label="User Information">
-      <div id="userEmail" tabindex="0"></div>
-      <button id="logoutBtn" aria-label="Sign out from your account">Logout</button>
-    </div>
+    <div class="sidebar-footer">&copy; 2025 Webhook Receiver App</div>
   </aside>
 
-  <main class="main" role="main">
-    <div id="endpointContainer" aria-label="Current endpoint URL and copy button" aria-live="polite" aria-atomic="true">
-      <div id="endpointUrl" tabindex="0" title="Your endpoint URL will show here"></div>
-      <button id="copyEndpointBtn" disabled>Copy</button>
-    </div>
-    <div class="requests-container" aria-live="polite" aria-atomic="true" aria-relevant="additions" tabindex="0" role="region">
-      <div class="requests-scroll">
-        <div id="requests"></div>
+  <main class="main-area" aria-label="Main content">
+    <div class="main-inner-content">
+      <div class="endpoint-url-row">
+        <div id="endpointUrl" tabindex="0" title="Your webhook endpoint URL will appear here"></div>
+        <button id="copyEndpointBtn" disabled aria-label="Copy endpoint URL">Copy</button>
+      </div>
+      <button class="toggle-details-btn" id="toggleAllDetailsBtn" aria-pressed="false">Show All Details</button>
+      <div class="requests-table-container" id="requestsTableContainer" role="region" aria-live="polite" aria-atomic="true" aria-relevant="additions">
+        <div id="requests">
+          <div class="no-requests">No requests have been received yet.</div>
+        </div>
       </div>
     </div>
   </main>
-  <footer>&copy; 2025 Webhook Receiver App</footer>
+</div>
 
-  <!-- Endpoint popover -->
-  <div id="popover" class="endpoint-popover" tabindex="-1" style="display:none;">
-    <button class="popover-close" aria-label="Close">×</button>
-    <div class="popover-content"></div>
-  </div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  (function() {
+    const socket = io();
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    (function() {
-      const socket = io();
+    const newEndpointBtn = document.getElementById('newEndpointBtn');
+    const endpointUrl = document.getElementById('endpointUrl');
+    const copyEndpointBtn = document.getElementById('copyEndpointBtn');
+    const requestsDiv = document.getElementById('requests');
+    const endpointList = document.getElementById('endpointList');
+    const g_idsignin = document.getElementById('g_idsignin');
+    const userInfo = document.getElementById('userInfo');
+    const userEmail = document.getElementById('userEmail');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const g_idsignin_container = document.getElementById('g_idsignin-container');
+    const toggleAllBtn = document.getElementById('toggleAllDetailsBtn');
 
-      const newEndpointBtn = document.getElementById('newEndpointBtn');
-      const endpointUrl = document.getElementById('endpointUrl');
-      const copyEndpointBtn = document.getElementById('copyEndpointBtn');
-      const requestsDiv = document.getElementById('requests');
-      const endpointList = document.getElementById('endpointList');
-      const g_idsignin = document.getElementById('g_idsignin');
-      const userInfo = document.getElementById('userInfo');
-      const userEmail = document.getElementById('userEmail');
-      const logoutBtn = document.getElementById('logoutBtn');
-      const g_idsignin_container = document.getElementById('g_idsignin-container');
-      const popover = document.getElementById('popover');
-      const popoverContent = popover.querySelector('.popover-content');
-      const popoverClose = popover.querySelector('.popover-close');
+    let currentEndpoint = null;
+    let allRequests = [];
+    let endpoints = [];
+    let authToken = null;
+    let currentUser = null;
+    let allOpen = false;
 
-      let currentEndpoint = null;
-      let allRequests = [];
-      let endpoints = [];
-      let authToken = null;
-      let currentUser = null;
+    function formatTimestamp(iso) {
+      const dt = new Date(iso);
+      if (Number.isNaN(dt.getTime())) return iso;
+      return dt.toLocaleString();
+    }
 
-      function showPopover(html, anchorElem) {
-        popoverContent.innerHTML = html;
-        popover.classList.add('show');
-        popover.style.display = 'block';
-        let rect = anchorElem.getBoundingClientRect();
-        let vpW = window.innerWidth || document.documentElement.clientWidth;
-        let left = rect.left + rect.width/2 - 180;
-        if(left < 20) left = 20;
-        if(left + 340 > vpW) left = vpW - 360;
-        let top = rect.top - 160;
-        if(top < 24 || top + 160 < 0) top = rect.bottom + 18;
-        popover.style.left = left + 'px';
-        popover.style.top = top + 'px';
-        popover.focus();
+    function createMethodBadge(method) {
+      const m = (method || 'OTHER').toUpperCase();
+      const known = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+      const key = known.includes(m) ? m : 'OTHER';
+      const span = document.createElement('span');
+      span.className = 'method-badge ' + key;
+      span.title = `HTTP Method: ${key}`;
+      span.textContent = key;
+      return span;
+    }
+
+    function renderRequestRow(req, idx) {
+      const tr = document.createElement('tr');
+      const tdNum = document.createElement('td');
+      tdNum.innerHTML = `<strong>#${idx + 1}</strong><br><small>${formatTimestamp(req.timestamp)}</small>`;
+      tr.appendChild(tdNum);
+
+      const tdDetails = document.createElement('td');
+
+      function createDetail(name, obj) {
+        const dtl = document.createElement('details');
+        dtl.open = allOpen;
+        const sum = document.createElement('summary');
+        sum.textContent = `${name} (${Object.keys(obj || {}).length})`;
+        if (name === 'Headers') sum.appendChild(createMethodBadge(req.method));
+        dtl.appendChild(sum);
+        const pre = document.createElement('pre');
+        try { pre.textContent = JSON.stringify(obj || {}, null, 2); }
+        catch { pre.textContent = 'Invalid JSON'; }
+        dtl.appendChild(pre);
+        return dtl;
       }
-      function hidePopover() {
-        popover.classList.remove('show');
-        popover.style.display = 'none';
-        popoverContent.innerHTML = '';
+
+      tdDetails.appendChild(createDetail('Query Parameters', req.query));
+      tdDetails.appendChild(createDetail('Headers', req.headers));
+      tdDetails.appendChild(createDetail('Body', typeof req.body === 'object' ? req.body : { value: req.body || '(empty)' }));
+      tr.appendChild(tdDetails);
+
+      return tr;
+    }
+
+    function renderTable(requests) {
+      requestsDiv.textContent = '';
+      if (!requests.length) {
+        requestsDiv.innerHTML = `<div class="no-requests" role="alert" tabindex="0">No requests have been received yet.</div>`;
+        return;
       }
-      popoverClose.onclick = hidePopover;
-      window.addEventListener('keydown', function(e){ if(e.key==="Escape") hidePopover(); });
-      window.addEventListener('mousedown', function(e){
-        if(popover.classList.contains('show') && !popover.contains(e.target)) hidePopover();
+      const tbl = document.createElement('table');
+      const thead = document.createElement('thead');
+      thead.innerHTML = `<tr><th># & Timestamp</th><th>Request Data</th></tr>`;
+      tbl.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      requests.forEach((r, i) => {
+        tbody.appendChild(renderRequestRow(r, i));
       });
+      tbl.appendChild(tbody);
 
-      function formatTimestamp(iso) {
-        const dt = new Date(iso);
-        if (Number.isNaN(dt.getTime())) return iso;
-        return dt.toLocaleString();
-      }
+      requestsDiv.appendChild(tbl);
+    }
 
-      function createMethodBadge(method) {
-        const m = (method || 'OTHER').toUpperCase();
-        const known = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
-        const key = known.includes(m) ? m : 'OTHER';
-        const span = document.createElement('span');
-        span.className = 'method-badge ' + key;
-        span.title = `HTTP Method: ${key}`;
-        span.textContent = key;
-        return span;
-      }
+    toggleAllBtn.addEventListener('click', () => {
+      allOpen = !allOpen;
+      toggleAllBtn.textContent = allOpen ? 'Hide All Details' : 'Show All Details';
+      toggleAllBtn.setAttribute('aria-pressed', allOpen.toString());
+      requestsDiv.querySelectorAll('details').forEach(d => d.open = allOpen);
+    });
 
-      function renderRequestRow(req, idx) {
-        const tr = document.createElement('tr');
-        const tdNum = document.createElement('td');
-        tdNum.innerHTML = `<strong>#${idx + 1}</strong><span class="timestamp">${formatTimestamp(req.timestamp)}</span>`;
-        tr.appendChild(tdNum);
-
-        const tdDetails = document.createElement('td');
-        function createDetail(name, obj) {
-          const dtl = document.createElement('details');
-          dtl.open = false;
-          const sum = document.createElement('summary');
-          sum.textContent = `${name} (${Object.keys(obj || {}).length})`;
-          if(name === 'Headers') sum.appendChild(createMethodBadge(req.method));
-          dtl.appendChild(sum);
-          const pre = document.createElement('pre');
-          try { pre.textContent = JSON.stringify(obj || {}, null, 2); }
-          catch { pre.textContent = 'Invalid JSON'; }
-          dtl.appendChild(pre);
-          return dtl;
-        }
-        tdDetails.appendChild(createDetail('Query Parameters', req.query));
-        tdDetails.appendChild(createDetail('Headers', req.headers));
-        tdDetails.appendChild(createDetail('Body', typeof req.body === 'object' ? req.body : { value: req.body || '(empty)' }));
-        tr.appendChild(tdDetails);
-        return tr;
-      }
-
-      function renderTable(requests) {
-        requestsDiv.textContent = '';
-        if (!requests.length) {
-          requestsDiv.innerHTML = `
-            <div class="no-requests" role="alert" aria-live="assertive" tabindex="0">
-              <svg role="img" aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12" y2="16"></line>
-              </svg>
-              No requests have been received yet.
-            </div>`;
+    async function loadEndpoints() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/endpoints', { headers: { 'Authorization': `Bearer ${authToken}` } });
+        if (!res.ok) throw new Error('Failed to load endpoints');
+        endpoints = await res.json();
+        endpointList.textContent = '';
+        if (!endpoints.length) {
+          const li = document.createElement('li');
+          li.textContent = 'No endpoints created yet.';
+          li.style.fontStyle = 'italic';
+          li.tabIndex = -1;
+          endpointList.appendChild(li);
           return;
         }
-        const tbl = document.createElement('table');
-        const thead = document.createElement('thead');
-        thead.innerHTML = `
-          <tr>
-            <th scope="col">Request Info</th>
-            <th scope="col">Request Data</th>
-          </tr>`;
-        tbl.appendChild(thead);
+        endpoints.forEach(ep => {
+          const li = document.createElement('li');
+          li.tabIndex = 0;
+          li.setAttribute('role', 'option');
+          li.className = (ep.id === currentEndpoint) ? 'selected' : '';
+          li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
 
-        const tbody = document.createElement('tbody');
-        requests.forEach((r, i) => {
-          tbody.appendChild(renderRequestRow(r, i));
-        });
-        tbl.appendChild(tbody);
+          const spanName = document.createElement('span');
+          spanName.className = 'list-label';
+          spanName.textContent = ep.name || ep.id;
 
-        requestsDiv.appendChild(tbl);
-      }
+          const actions = document.createElement('div');
+          actions.className = 'endpoint-actions';
 
-      async function loadEndpoints() {
-        if (!authToken) return;
-        try {
-          const res = await fetch('/endpoints', { headers: { 'Authorization': `Bearer ${authToken}` } });
-          if (!res.ok) throw new Error('Failed to load endpoints');
-          endpoints = await res.json();
-          endpointList.textContent = '';
-          if (!endpoints.length) {
-            const li = document.createElement('li');
-            li.textContent = 'No endpoints created yet.';
-            li.style.fontStyle = 'italic';
-            li.tabIndex = -1;
-            endpointList.appendChild(li);
-            return;
-          }
-          endpoints.forEach(ep => {
-            const li = document.createElement('li');
-            const span = document.createElement('span');
-            span.className = 'endpoint-name';
-            span.textContent = ep.name ? ep.name : ep.id;
-
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'actions';
-
-            const delBTn = document.createElement('button');
-            delBTn.textContent = 'Delete';
-            delBTn.className = 'delete-endpoint-btn';
-            delBTn.onclick = async e => {
-              e.stopPropagation();
-              if (!confirm('Are you sure to delete this endpoint and its requests?')) return;
-              try {
-                const res = await fetch(`/endpoints/${ep.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } });
-                if (!res.ok) throw new Error('Delete failed');
-                await loadEndpoints();
-                if (currentEndpoint === ep.id) {
-                  currentEndpoint = null;
-                  endpointUrl.textContent = '';
-                  copyEndpointBtn.disabled = true;
-                  allRequests = [];
-                  renderTable(allRequests);
-                }
-              } catch (err) {
-                alert('Error: ' + err.message);
-              }
-            };
-
-            const infoIcon = document.createElement('span');
-            infoIcon.className = 'info-icon';
-            infoIcon.tabIndex = 0;
-            infoIcon.setAttribute('role', 'button');
-            infoIcon.setAttribute('aria-label', `Show endpoint info`);
-            infoIcon.textContent = 'i';
-            infoIcon.onclick = function(ev) {
-              ev.stopPropagation();
-              const html = `
-                <b>Endpoint Name:</b> <span>${(ep.name||ep.id)}</span><br>
-                <b>ID:</b> <span>${ep.id}</span><br>
-                <b>Created At:</b> <span>${formatTimestamp(ep.createdAt)}</span><br>
-                <b>Webhook URL:</b> <span style="word-break: break-all">${location.protocol}//${location.host}/${ep.id}</span>
-              `;
-              showPopover(html, infoIcon);
-            };
-            infoIcon.onkeydown = function(ev) {
-              if(ev.key===' '||ev.key==='Enter') { ev.preventDefault(); infoIcon.click(); }
-            };
-
-            actionsDiv.appendChild(delBTn);
-            actionsDiv.appendChild(infoIcon);
-
-            li.appendChild(span);
-            li.appendChild(actionsDiv);
-
-            li.tabIndex = 0;
-            li.role = 'option';
-            li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
-            li.onclick = () => {
-              currentEndpoint = ep.id;
-              endpointUrl.textContent = `${location.protocol}//${location.host}/${ep.id}`;
-              copyEndpointBtn.disabled = false;
-              allRequests = [];
-              renderTable(allRequests);
-              socket.emit('join', ep.id);
-              [...endpointList.children].forEach(childLi => {
-                childLi.setAttribute('aria-selected', childLi === li ? 'true' : 'false');
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.title = 'Delete this endpoint';
+          delBtn.onclick = async e => {
+            e.stopPropagation();
+            if (!confirm('Are you sure you want to delete this endpoint and all its requests?')) return;
+            try {
+              const res = await fetch(`/endpoints/${ep.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${authToken}` }
               });
-            };
-            li.onkeydown = e => {
-              if(e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                currentEndpoint = ep.id;
-                endpointUrl.textContent = `${location.protocol}//${location.host}/${ep.id}`;
-                copyEndpointBtn.disabled = false;
+              if (!res.ok) throw new Error('Delete failed');
+              await loadEndpoints();
+              if (currentEndpoint === ep.id) {
+                currentEndpoint = null;
+                endpointUrl.textContent = '';
+                copyEndpointBtn.disabled = true;
                 allRequests = [];
                 renderTable(allRequests);
-                socket.emit('join', ep.id);
-                [...endpointList.children].forEach(childLi => {
-                  childLi.setAttribute('aria-selected', childLi === li ? 'true' : 'false');
-                });
               }
-            };
-            endpointList.appendChild(li);
-          });
-        } catch (err) {
-          endpointList.innerHTML = `<li><em>Error loading endpoints.</em></li>`;
-        }
-      }
+            } catch (err) {
+              alert('Error: ' + err.message);
+            }
+          };
+          actions.appendChild(delBtn);
 
-      copyEndpointBtn.onclick = () => {
-        const txt = endpointUrl.textContent.trim();
-        if (!txt) {
-          alert("No URL available.");
-          return;
-        }
-        navigator.clipboard.writeText(txt).then(() => {
-          copyEndpointBtn.textContent = 'Copied!';
-          copyEndpointBtn.disabled = true;
-          setTimeout(() => {
-            copyEndpointBtn.textContent = 'Copy';
-            copyEndpointBtn.disabled = false;
-          }, 2000);
-        }, () => alert("Copy failed"));
-      };
+          li.appendChild(spanName);
+          li.appendChild(actions);
 
-      socket.on('init_requests', data => {
-        allRequests = [...data];
-        renderTable(allRequests);
-      });
-      socket.on('new_request', req => {
-        allRequests.unshift(req);
-        renderTable(allRequests);
-      });
-      socket.on('error', msg => alert(msg));
+          li.onclick = () => selectEndpoint(ep.id);
+          li.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectEndpoint(ep.id);
+            }
+          };
 
-      newEndpointBtn.onclick = async () => {
-        if (!authToken) {
-          alert('Please sign in to create a new endpoint.');
-          return;
-        }
-        let name = prompt("Enter a descriptive name for your new webhook endpoint (optional):", "");
-        if (name !== null) name = name.trim();
-        try {
-          const res = await fetch('/new', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${authToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name: name || undefined })
-          });
-          if (!res.ok) throw new Error('Create failed');
-          const data = await res.json();
-          await loadEndpoints();
-          currentEndpoint = data.id;
-          endpointUrl.textContent = `${location.protocol}//${location.host}/${data.id}`;
-          copyEndpointBtn.disabled = false;
-          allRequests = [];
-          renderTable(allRequests);
-          socket.emit('join', data.id);
-          [...endpointList.children].forEach(li => {
-            li.setAttribute('aria-selected', li.textContent.startsWith(data.id) ? 'true' : 'false');
-          });
-        } catch (err) {
-          alert('Error: ' + err.message);
-        }
-      };
-
-      function handleCredentialResponse(response) {
-        if (!response.credential) {
-          alert("Missing credentials");
-          return;
-        }
-        fetch('/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: response.credential }),
-        }).then(r => {
-          if (!r.ok) throw new Error('Authentication failed');
-          return r.json();
-        }).then(data => {
-          authToken = response.credential;
-          currentUser = data.user;
-          updateUIOnSignIn();
-          return loadEndpoints();
-        }).catch(err => {
-          alert('Authentication error: ' + err.message);
-          googleLogout();
+          endpointList.appendChild(li);
         });
+      } catch (err) {
+        endpointList.innerHTML = `<li><em>Error loading endpoints.</em></li>`;
       }
-      function updateUIOnSignIn() {
-        g_idsignin_container.style.display = 'none';
-        userInfo.style.display = 'flex';
-        userEmail.textContent = currentUser.email;
-        newEndpointBtn.disabled = false;
+    }
+
+    function selectEndpoint(id) {
+      currentEndpoint = id;
+      endpointUrl.textContent = `${location.protocol}//${location.host}/${id}`;
+      copyEndpointBtn.disabled = false;
+      allRequests = [];
+      renderTable(allRequests);
+      socket.emit('join', id);
+      [...endpointList.children].forEach(li => {
+        li.classList.toggle('selected', li.querySelector('.list-label')?.textContent === (endpoints.find(ep => ep.id === id)?.name || id));
+        li.setAttribute('aria-selected', li.classList.contains('selected') ? 'true' : 'false');
+      });
+    }
+
+    copyEndpointBtn.onclick = () => {
+      const txt = endpointUrl.textContent.trim();
+      if (!txt) {
+        alert("No URL available.");
+        return;
       }
-      function updateUIOnSignOut() {
-        g_idsignin_container.style.display = 'block';
-        userInfo.style.display = 'none';
-        userEmail.textContent = '';
-        newEndpointBtn.disabled = true;
-        currentEndpoint = null;
-        endpointUrl.textContent = '';
+      navigator.clipboard.writeText(txt).then(() => {
+        copyEndpointBtn.textContent = 'Copied!';
         copyEndpointBtn.disabled = true;
-        allRequests = [];
-        renderTable(allRequests);
-        endpointList.textContent = '';
+        setTimeout(() => {
+          copyEndpointBtn.textContent = 'Copy';
+          copyEndpointBtn.disabled = false;
+        }, 2000);
+      }).catch(() => alert("Copy failed"));
+    };
+
+    socket.on('init_requests', data => {
+      allRequests = [...data];
+      renderTable(allRequests);
+      allOpen = false;
+      toggleAllBtn.textContent = 'Show All Details';
+      toggleAllBtn.setAttribute('aria-pressed', 'false');
+    });
+    socket.on('new_request', req => {
+      allRequests.unshift(req);
+      renderTable(allRequests);
+      allOpen = false;
+      toggleAllBtn.textContent = 'Show All Details';
+      toggleAllBtn.setAttribute('aria-pressed', 'false');
+    });
+    socket.on('error', msg => alert(msg));
+
+    newEndpointBtn.onclick = async () => {
+      if (!authToken) {
+        alert('Please sign in to create a new endpoint.');
+        return;
       }
-      logoutBtn.onclick = () => googleLogout();
-      function googleLogout() {
-        authToken = null;
-        currentUser = null;
-        updateUIOnSignOut();
-        google.accounts.id.disableAutoSelect();
-      }
-      function checkStoredSession() {
-        updateUIOnSignOut();
-      }
-      window.onload = () => {
-        google.accounts.id.initialize({
-          client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
-          callback: handleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
+      let name = prompt("Enter a name for your new webhook endpoint (optional):", "");
+      if (name !== null) name = name.trim();
+      try {
+        const res = await fetch('/new', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: name || undefined })
         });
-        google.accounts.id.renderButton(g_idsignin, {
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          locale: 'en',
-        });
-        google.accounts.id.prompt();
-        checkStoredSession();
-      };
-    })();
-  </script>
+        if (!res.ok) throw new Error('Create failed');
+        const data = await res.json();
+        await loadEndpoints();
+        selectEndpoint(data.id);
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    function handleCredentialResponse(response) {
+      if (!response.credential) {
+        alert("Missing credentials");
+        return;
+      }
+      fetch('/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: response.credential }),
+      }).then(r => {
+        if (!r.ok) throw new Error('Authentication failed');
+        return r.json();
+      }).then(data => {
+        authToken = response.credential;
+        currentUser = data.user;
+        updateUIOnSignIn();
+        return loadEndpoints();
+      }).catch(err => {
+        alert('Authentication error: ' + err.message);
+        googleLogout();
+      });
+    }
+
+    function updateUIOnSignIn() {
+      g_idsignin_container.style.display = 'none';
+      userInfo.style.display = 'flex';
+      userEmail.textContent = currentUser.email;
+      userEmail.title = currentUser.email;
+      newEndpointBtn.disabled = false;
+    }
+
+    function updateUIOnSignOut() {
+      g_idsignin_container.style.display = 'block';
+      userInfo.style.display = 'none';
+      userEmail.textContent = '';
+      userEmail.title = '';
+      newEndpointBtn.disabled = true;
+      currentEndpoint = null;
+      endpointUrl.textContent = '';
+      copyEndpointBtn.disabled = true;
+      allRequests = [];
+      renderTable(allRequests);
+      allOpen = false;
+      toggleAllBtn.textContent = 'Show All Details';
+      toggleAllBtn.setAttribute('aria-pressed', 'false');
+      endpointList.textContent = '';
+    }
+
+    logoutBtn.onclick = () => googleLogout();
+
+    function googleLogout() {
+      authToken = null;
+      currentUser = null;
+      updateUIOnSignOut();
+      google.accounts.id.disableAutoSelect();
+    }
+
+    function checkStoredSession() {
+      updateUIOnSignOut();
+    }
+
+    window.onload = () => {
+      // *** Replace with your actual Google Client ID ***
+      google.accounts.id.initialize({
+        client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
+        callback: handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      google.accounts.id.renderButton(g_idsignin, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        locale: 'en',
+      });
+      google.accounts.id.prompt();
+      checkStoredSession();
+    };
+  })();
+</script>
 </body>
 </html>

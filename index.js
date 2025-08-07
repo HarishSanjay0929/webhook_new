@@ -17,15 +17,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const mongoUri = process.env.MONGO_URI;
-const dbName = 'webhookReceiverDB'; // Choose any name you want
+const dbName = 'webhookReceiverDB';
 
-let db;
-let endpointsCollection;
-let requestsCollection;
-
+let db, endpointsCollection, requestsCollection;
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Connect to MongoDB Atlas
 async function connectMongo() {
   const client = new MongoClient(mongoUri);
   await client.connect();
@@ -35,12 +31,9 @@ async function connectMongo() {
   console.log('Connected to MongoDB Atlas');
 }
 
-// Google Authentication route
 app.post('/auth/google', async (req, res) => {
   const { token } = req.body;
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
-  }
+  if (!token) return res.status(400).json({ error: 'Token is required' });
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -54,14 +47,11 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
-// Middleware to protect routes
 async function authenticateGoogleToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).send('Unauthorized: No token provided');
-
   const token = authHeader.split(' ')[1];
   if (!token) return res.status(401).send('Unauthorized: Invalid token format');
-
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
@@ -75,17 +65,15 @@ async function authenticateGoogleToken(req, res, next) {
   }
 }
 
-// Create new webhook endpoint with optional custom name
 app.post('/new', authenticateGoogleToken, async (req, res) => {
   const id = uuidv4();
   const { name } = req.body;
-
   try {
     await endpointsCollection.insertOne({
       _id: id,
       name: name ? name.trim() : undefined,
       createdAt: new Date(),
-      createdBy: req.user.email // Optionally save creator info
+      createdBy: req.user.email
     });
     res.json({
       url: `${req.protocol}://${req.get('host')}/${id}`,
@@ -98,15 +86,13 @@ app.post('/new', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// List all created endpoints, include custom name
 app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   try {
     const endpoints = await endpointsCollection
-      .find({})
+      .find({ createdBy: req.user.email })
       .sort({ createdAt: -1 })
       .project({ _id: 1, createdAt: 1, createdBy: 1, name: 1 })
       .toArray();
-
     res.json(
       endpoints.map(ep => ({
         id: ep._id,
@@ -121,7 +107,6 @@ app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// Delete endpoint and related webhook requests (protected)
 app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   const endpointId = req.params.id;
   try {
@@ -134,16 +119,11 @@ app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// Catch-all webhook receiver for any endpoint (public access)
 app.all('/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
     const endpointExists = await endpointsCollection.findOne({ _id: id });
-    if (!endpointExists) {
-      return res.status(404).send('Endpoint not found');
-    }
-
+    if (!endpointExists) return res.status(404).send('Endpoint not found');
     const data = {
       endpointId: id,
       method: req.method,
@@ -152,9 +132,7 @@ app.all('/:id', async (req, res) => {
       query: req.query,
       timestamp: new Date()
     };
-
     await requestsCollection.insertOne(data);
-
     io.to(id).emit('new_request', {
       method: data.method,
       headers: data.headers,
@@ -162,7 +140,6 @@ app.all('/:id', async (req, res) => {
       query: data.query,
       timestamp: data.timestamp.toISOString()
     });
-
     res.status(200).send('Received');
   } catch (err) {
     console.error('Error handling webhook request:', err);
@@ -170,13 +147,9 @@ app.all('/:id', async (req, res) => {
   }
 });
 
-// Serve static frontend files (assumes your UI files are in 'public' folder)
 app.use(express.static('public'));
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('Client connected');
-
   socket.on('join', async (endpointId) => {
     try {
       const endpointExists = await endpointsCollection.findOne({ _id: endpointId });
@@ -185,13 +158,11 @@ io.on('connection', (socket) => {
         return;
       }
       socket.join(endpointId);
-
       const recentRequests = await requestsCollection
         .find({ endpointId })
         .sort({ timestamp: -1 })
         .limit(100)
         .toArray();
-
       const formattedRequests = recentRequests.map(r => ({
         method: r.method,
         headers: r.headers,
@@ -199,28 +170,17 @@ io.on('connection', (socket) => {
         query: r.query,
         timestamp: r.timestamp.toISOString()
       }));
-
       socket.emit('init_requests', formattedRequests);
     } catch (err) {
-      console.error('Error during socket join:', err);
       socket.emit('error', 'Internal server error');
     }
   });
-
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
 });
 
-// Start server after connecting to MongoDB
-connectMongo()
-  .then(() => {
-    const PORT = process.env.PORT || 3000;
-    server.listen(PORT, () => {
-      console.log(`Server started on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error('Failed to connect to MongoDB Atlas:', error);
-    process.exit(1);
-  });
+connectMongo().then(() => {
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+}).catch((error) => {
+  console.error('Failed to connect to MongoDB Atlas:', error);
+  process.exit(1);
+});
