@@ -42,17 +42,11 @@ app.post('/auth/google', async (req, res) => {
     return res.status(400).json({ error: 'Token is required' });
   }
   try {
-    // Verify Google ID token
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-
-    // Optional: Find or create user in your database here
-    // Example: const user = await usersCollection.findOne({ googleId: payload.sub });
-
-    // Return user info and success message
     res.json({ success: true, user: payload });
   } catch (err) {
     console.error('Google auth error:', err);
@@ -81,18 +75,22 @@ async function authenticateGoogleToken(req, res, next) {
   }
 }
 
-// Example: Protect your /new endpoint with authentication if you want
-app.get('/new', authenticateGoogleToken, async (req, res) => {
+// Create new webhook endpoint with optional custom name
+app.post('/new', authenticateGoogleToken, async (req, res) => {
   const id = uuidv4();
+  const { name } = req.body;
+
   try {
     await endpointsCollection.insertOne({
       _id: id,
+      name: name ? name.trim() : undefined,
       createdAt: new Date(),
       createdBy: req.user.email // Optionally save creator info
     });
     res.json({
       url: `${req.protocol}://${req.get('host')}/${id}`,
-      id
+      id,
+      name: name ? name.trim() : undefined,
     });
   } catch (err) {
     console.error('Error creating endpoint:', err);
@@ -100,21 +98,21 @@ app.get('/new', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// List all created endpoints for your frontend endpoint list
-// You can also protect this route if needed
+// List all created endpoints, include custom name
 app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   try {
     const endpoints = await endpointsCollection
       .find({})
       .sort({ createdAt: -1 })
-      .project({ _id: 1, createdAt: 1, createdBy: 1 })
+      .project({ _id: 1, createdAt: 1, createdBy: 1, name: 1 })
       .toArray();
 
     res.json(
       endpoints.map(ep => ({
         id: ep._id,
         createdAt: ep.createdAt.toISOString(),
-        createdBy: ep.createdBy || null
+        createdBy: ep.createdBy || null,
+        name: ep.name || null
       }))
     );
   } catch (err) {
@@ -123,12 +121,12 @@ app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// Delete an endpoint and its requests (protected route)
+// Delete endpoint and related webhook requests (protected)
 app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   const endpointId = req.params.id;
   try {
     await endpointsCollection.deleteOne({ _id: endpointId });
-    await requestsCollection.deleteMany({ endpointId }); // remove related requests
+    await requestsCollection.deleteMany({ endpointId });
     res.json({ success: true });
   } catch (err) {
     console.error('Error deleting endpoint:', err);
@@ -136,7 +134,7 @@ app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   }
 });
 
-// Catch all webhook requests to dynamic endpoints (public access)
+// Catch-all webhook receiver for any endpoint (public access)
 app.all('/:id', async (req, res) => {
   const { id } = req.params;
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Webhook Receiver - Endpoints List Enhanced UI</title>
@@ -17,32 +17,30 @@
       --color-badge-post: #3b82f6;
       --color-badge-put: #f59e0b;
       --color-badge-delete: #ef4444;
-      --color-scrollbar-thumb: rgba(44, 62, 80, 0.25);
+      --scrollbar-thumb: rgba(44, 62, 80, 0.25);
       --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      --transition-fast: 0.2s ease-in-out;
+      --transition: 0.2s ease;
       --border-radius: 8px;
       --shadow-soft: 0 4px 12px rgba(0,0,0,0.05);
       --shadow-hover: 0 8px 24px rgba(0,0,0,0.1);
+      --border-thick: 1.5px solid #2563eb;
+      --border-normal: 1.5px solid #bfcdf7;
+      --header-height: 64px;
     }
-
-    /* Reset and Base Styles */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    body, html {
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
       margin: 0; padding: 0; height: 100%;
       font-family: var(--font-family);
-      background-color: var(--color-bg);
+      background: var(--color-bg);
       color: var(--color-text);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       scroll-behavior: smooth;
     }
-
     body {
       display: grid;
       grid-template-columns: 320px 1fr;
-      grid-template-rows: 60px 1fr 48px;
+      grid-template-rows: var(--header-height) 1fr 48px;
       grid-template-areas:
         "header header"
         "sidebar main"
@@ -50,507 +48,419 @@
       height: 100vh;
       overflow: hidden;
     }
-
     header {
       grid-area: header;
-      background: var(--color-primary);
+      background-color: var(--color-primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: 0.05em;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 0 24px;
-      color: white;
-      font-weight: 700;
-      font-size: 1.5rem;
-      letter-spacing: 0.05em;
       user-select: none;
-      box-shadow: var(--shadow-soft);
       position: sticky;
       top: 0;
       z-index: 10;
+      box-shadow: var(--shadow-soft);
     }
-
     footer {
       grid-area: footer;
-      background: var(--color-primary);
-      color: white;
+      background-color: var(--color-primary);
+      color: #fff;
       font-size: 0.9rem;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
       user-select: none;
       position: sticky;
       bottom: 0;
       z-index: 10;
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
     }
-
     .sidebar {
       grid-area: sidebar;
-      background: var(--color-card);
-      padding: 30px 24px;
+      background-color: var(--color-card);
+      padding: 24px 24px 30px 24px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      box-shadow: inset -1px 0 0 #e0e7ff;
+      gap: 16px;
       overflow-y: auto;
       border-right: 1px solid #e0e7ff;
-      transition: background-color var(--transition-fast);
+      box-shadow: inset -1px 0 0 #e0e7ff;
     }
-
-    .sidebar button, 
-    .sidebar input[type="text"] {
-      border-radius: var(--border-radius);
-      font-size: 1rem;
-      box-shadow: var(--shadow-soft);
-      transition: box-shadow var(--transition-fast), background-color var(--transition-fast);
-    }
-
-    .sidebar button {
-      background-color: var(--color-primary);
-      border: none;
-      color: white;
-      padding: 14px 22px;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      user-select: none;
-      filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.1));
-      width: 100%;
-    }
-    .sidebar button:hover {
-      background-color: var(--color-primary-dark);
-      box-shadow: var(--shadow-hover);
-    }
-    .sidebar button:disabled {
-      background-color: #9ca3af;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    .sidebar input[type="text"] {
-      border: 1.5px solid #cbd5e1;
-      padding: 14px 18px;
-      width: 100%;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-    .sidebar input[type="text"]:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      box-shadow: 0 0 8px var(--color-primary);
-    }
-
-    /* New endpoint list container */
     #endpointListContainer {
-      margin-top: 10px;
-      border: 1.5px solid #cbd5e1;
+      order: 1;
+      border: 1.5px solid #cbdde5;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow-soft);
-      overflow-y: auto;
-      max-height: 220px;
-      background-color: #fefefe;
+      background-color: #fff;
+      max-height: 320px;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
     }
-
-    #endpointListContainer h3 {
+    #endpointListContainer > h3 {
       margin: 8px 12px;
       font-weight: 700;
       font-size: 1.1rem;
-      user-select: none;
-      background-color: #fefefe;
+      background: #fff;
       position: sticky;
       top: 0;
-      z-index: 1;
-      border-bottom: 1px solid #e5e7eb;
+      z-index: 50;
+      border-bottom: 1.5px solid #d1d5db;
+      user-select: none;
     }
     #endpointList {
-      list-style: none;
       margin: 0;
       padding: 0;
+      list-style: none;
       font-size: 0.9rem;
-      max-height: 220px;
+      max-height: 320px;
       overflow-y: auto;
     }
     #endpointList li {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 10px 10px 14px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 14px 10px 14px;
+      border-bottom: 1.5px solid #d5d9e0;
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.2s ease-in-out;
+      transition: background-color var(--transition);
+      position: relative;
+    }
+    #endpointList li > span.endpoint-name {
+      flex: 1;
+      user-select: text;
+      overflow-wrap: anywhere;
+    }
+    #endpointList li > div.actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
     #endpointList li:hover,
     #endpointList li:focus {
-      background-color: #bfdbfe;
+      background-color: #c4d8ff;
       outline: none;
       color: var(--color-primary-dark);
     }
-    #endpointList li:last-child {
-      border-bottom: none;
-    }
+    #endpointList li:last-child { border-bottom: none; }
     #endpointList li[aria-selected="true"] {
       background-color: var(--color-primary);
-      color: white;
-      font-weight: 700;
-    }
-
-    /* Delete button styling */
-    .delete-endpoint-btn {
-      background-color: #ef4444;
-      border: none;
       color: #fff;
-      border-radius: 5px;
-      padding: 4px 15px;
-      font-size: 0.95em;
       font-weight: 700;
-      cursor: pointer;
-      flex: 0 0 auto;
-      white-space: nowrap;
-      margin-left: 12px;
-      min-width: unset;
-      max-width: 100px;
-      height: auto;
-      box-shadow: none;
-      align-self: center;
-      transition: background 0.15s;
     }
-    .delete-endpoint-btn:hover {
-      background-color: #dc2626;
-    }
-    #endpointList li {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0;
-    }
-    #endpointList li span {
-      flex: 1 1 0%;
-      min-width: 0;
-      word-break: break-all;
-    }
-
-    /* ==== CUSTOM SCROLLBAR STYLES ==== */
-    .sidebar,
-    #endpointList,
-    #endpointListContainer {
-      scrollbar-width: thin;
-      scrollbar-color: #b0c6f9 #f7faff;
-    }
-
-    .sidebar::-webkit-scrollbar,
-    #endpointList::-webkit-scrollbar,
-    #endpointListContainer::-webkit-scrollbar {
-      width: 8px;
-      background: #f7faff;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb,
-    #endpointList::-webkit-scrollbar-thumb,
-    #endpointListContainer::-webkit-scrollbar-thumb {
-      background: #b0c6f9;
-      border-radius: 12px;
-      border: 2px solid #f7faff;
-    }
-
-    .sidebar::-webkit-scrollbar-thumb:hover,
-    #endpointList::-webkit-scrollbar-thumb:hover,
-    #endpointListContainer::-webkit-scrollbar-thumb:hover {
-      background: #3b82f6;
-    }
-
-    .sidebar::-webkit-scrollbar-corner, 
-    #endpointList::-webkit-scrollbar-corner,
-    #endpointListContainer::-webkit-scrollbar-corner {
-      background: none;
-    }
-    /* ==== END CUSTOM SCROLLBAR ==== */
-
-    .main {
-      grid-area: main;
-      padding: 30px 24px;
-      overflow-y: auto;
-      background: var(--color-bg);
-    }
-
-    /* Endpoint URL with copy button container */
-    #endpointContainer {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    #endpointUrl {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--color-primary-dark);
-      background: #e0e7ff;
-      border-radius: var(--border-radius);
-      padding: 12px 18px;
-      border: 2px solid var(--color-primary);
-      flex: 1 1 auto;
-      min-width: 0;
-      user-select: all;
-      cursor: text;
-      box-shadow: var(--shadow-soft);
-      transition: box-shadow var(--transition-fast);
-    }
-    #endpointUrl:hover {
-      box-shadow: var(--shadow-hover);
-    }
-
-    #copyEndpointBtn {
-      background-color: var(--color-primary);
-      border: none;
+    .delete-endpoint-btn {
+      background-color: var(--color-error);
       color: white;
-      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 14px;
       font-weight: 700;
-      font-size: 1rem;
-      border-radius: var(--border-radius);
       cursor: pointer;
-      flex-shrink: 0;
-      transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
-      box-shadow: var(--shadow-soft);
+      min-width: 85px;
+      max-width: 100px;
       user-select: none;
+      transition: background-color var(--transition);
     }
-    #copyEndpointBtn:hover:not(:disabled) {
+    .delete-endpoint-btn:hover { background-color: #d32f2f; }
+    .info-icon {
+      font-style: normal;
+      color: var(--color-primary-dark);
+      background-color: #dbeafe;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      flex-shrink: 0;
+    }
+    #g_idsignin-container { order: 2; margin-top: 10px; width: 100%; }
+    #g_idsignin { width: 100% !important; display: block !important; min-height: 40px; user-select: none; }
+    #newEndpointBtn {
+      order: 3;
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 14px 22px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      user-select: none;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-soft);
+      transition: background-color var(--transition), box-shadow var(--transition);
+      margin-top: 16px;
+      flex-shrink: 0;
+    }
+    #newEndpointBtn:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #newEndpointBtn:hover:not(:disabled) {
       background-color: var(--color-primary-dark);
       box-shadow: var(--shadow-hover);
     }
-    #copyEndpointBtn:disabled {
-      background-color: #a5b4fc;
-      cursor: default;
-      box-shadow: none;
-    }
-
-    #filterInput {
-      border-radius: var(--border-radius);
-      border: 1.5px solid #cbd5e1;
-      padding: 14px 18px;
-      font-size: 1rem;
-      width: 100%;
-      margin-bottom: 24px;
-      font-weight: 600;
-      box-shadow: var(--shadow-soft);
-      transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
-    }
-    #filterInput:focus {
-      outline: none;
-      border-color: var(--color-primary);
-      box-shadow: 0 0 10px var(--color-primary);
-    }
-
-    /* Google Sign-In button container styling */
-    #g_id_signin {
-      margin-bottom: 15px;
-      width: 100%;
-      max-width: 320px;
-    }
-
-    /* User info and logout button styles */
     #userInfo {
+      order: 4;
       display: none;
       flex-direction: column;
       gap: 5px;
-      margin-bottom: 15px;
+      margin-top: 16px;
+      max-width: 320px;
+      word-break: break-word;
+      white-space: normal;
     }
     #userEmail {
       font-weight: 700;
       word-break: break-word;
+      white-space: normal;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      color: var(--color-text);
       user-select: text;
     }
     #logoutBtn {
-      background-color: #ef4444;
-      color: white;
+      background-color: var(--color-error);
       border: none;
-      padding: 8px 12px;
+      color: white;
+      padding: 8px 14px;
       border-radius: 6px;
       cursor: pointer;
       width: 100%;
       font-weight: 700;
-    }
-    #logoutBtn:hover {
-      background-color: #dc2626;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      background-color: var(--color-card);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-soft);
-      table-layout: fixed;
-      overflow: hidden;
-    }
-
-    thead {
-      background-color: var(--color-primary);
-      color: white;
       user-select: none;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      transition: background-color var(--transition);
+      margin-top: 8px;
     }
-
-    th, td {
-      padding: 16px 20px;
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
+    #logoutBtn:hover { background-color: #d32f2f; }
+    .main {
+      grid-area: main;
+      padding: 30px 24px;
+      overflow-y: auto;
+      background-color: var(--color-bg);
+      overflow-x: hidden !important;
+    }
+    #endpointContainer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    #endpointUrl {
+      background-color: #dbeafe;
+      border: 2px solid var(--color-primary);
+      border-radius: var(--border-radius);
+      color: var(--color-primary-dark);
+      font-weight: 700;
       font-size: 1rem;
-      vertical-align: middle;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 18px;
+      user-select: all;
+      cursor: text;
+      flex-grow: 1;
+      min-width: 0;
+      box-shadow: var(--shadow-soft);
+      transition: box-shadow var(--transition);
     }
-
-    tbody tr:hover {
-      background-color: #eff6ff;
-      cursor: default;
-      transition: background-color 0.15s ease-in-out;
-    }
-
-    .method-badge {
-      display: inline-block;
-      padding: 5px 14px;
+    #endpointUrl:hover { box-shadow: var(--shadow-hover); }
+    #copyEndpointBtn {
+      background-color: var(--color-primary);
+      border: none;
+      border-radius: var(--border-radius);
       color: white;
       font-weight: 700;
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 1rem;
+      padding: 12px 24px;
+      cursor: pointer;
       user-select: none;
-      position: relative;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-      transition: background-color 0.2s ease-in-out;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-soft);
+      transition: background-color var(--transition), box-shadow var(--transition);
+      white-space: nowrap;
     }
-
+    #copyEndpointBtn:hover:enabled {
+      background-color: var(--color-primary-dark);
+      box-shadow: var(--shadow-hover);
+    }
+    #copyEndpointBtn:disabled {
+      background-color: #9ca3af;
+      cursor: default;
+      box-shadow: none;
+    }
+    .requests-container { position: relative; max-height: 60vh; overflow: visible; }
+    .requests-scroll {
+      max-height: 60vh;
+      overflow-y: auto;
+      border-radius: var(--border-radius);
+      overflow-x: hidden !important;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: var(--shadow-soft);
+      border: var(--border-thick);
+      font-size: 1rem;
+      position: relative;
+      table-layout: fixed;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      overflow-x: hidden;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      background-color: var(--color-primary);
+      color: black;
+      font-weight: 600;
+      z-index: 10;
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    th, td {
+      border: var(--border-normal);
+      padding: 16px 20px;
+      vertical-align: middle;
+      background-color: white;
+      white-space: normal;
+      word-break: break-word;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    th:first-child, td:first-child {
+      width: 80px;
+      max-width: 90px;
+      min-width: 60px;
+      text-align: center;
+    }
+    th:last-child, td:last-child { width: auto; min-width: 400px; }
+    tbody tr:hover { background-color: #dbeafe; }
+    table tr:first-child th:first-child { border-top-left-radius: var(--border-radius); }
+    table tr:first-child th:last-child { border-top-right-radius: var(--border-radius); }
+    table tr:last-child td:first-child { border-bottom-left-radius: var(--border-radius); }
+    table tr:last-child td:last-child { border-bottom-right-radius: var(--border-radius); }
+    .method-badge {
+      display: inline-block;
+      background-color: var(--color-primary);
+      color: white;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      border-radius: 100px;
+      padding: 3px 10px;
+      margin-left: 8px;
+      user-select: none;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      position: relative;
+      transition: background-color var(--transition);
+    }
     .method-badge.GET { background-color: var(--color-badge-get); }
-    .method-badge.POST { background-color: var(--color-badge-post); }
-    .method-badge.PUT { background-color: var(--color-badge-put); }
-    .method-badge.DELETE { background-color: var(--color-badge-delete); }
-    .method-badge.PATCH { background-color: #8b5cf6; }
-
-    .method-badge[title]:hover::after {
+    .method-badge.POST { background-color: var(--color-badge-post);}
+    .method-badge.PUT { background-color: var(--color-badge-put);}
+    .method-badge.DELETE { background-color: var(--color-badge-delete);}
+    .method-badge.PATCH { background-color: #8b5cf6;}
+    .method-badge:hover::after {
       content: attr(title);
       position: absolute;
-      top: -34px;
-      left: 50%;
+      top: -30px; left: 50%;
       transform: translateX(-50%);
-      background: rgba(44, 62, 80, 0.85);
-      color: white;
-      padding: 6px 12px;
+      background-color: #162d6b;
+      padding: 4px 10px;
       border-radius: var(--border-radius);
       font-size: 0.75rem;
       white-space: nowrap;
+      color: white;
+      user-select: none;
       pointer-events: none;
       opacity: 0.95;
-      z-index: 10;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-
     details {
-      background: #f3f4f6;
+      border: 1px solid #ccc;
+      background-color: #f4f6fa;
       border-radius: var(--border-radius);
       margin-top: 10px;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
-      transition: background-color var(--transition-fast);
-      border: 1px solid #d1d5db;
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
     }
-
     summary {
-      padding: 12px 16px;
       font-weight: 700;
+      padding: 12px 20px;
       cursor: pointer;
-      outline: none;
       user-select: none;
-      color: var(--color-primary-dark);
       font-size: 1.05rem;
-      border-radius: var(--border-radius);
-      list-style: none;
-      transition: color var(--transition-fast);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      color: var(--color-primary-dark);
+      outline: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    summary::-webkit-details-marker {
-      display:none;
-    }
-    details[open] summary {
-      color: var(--color-primary);
-    }
+    summary::-webkit-details-marker { display: none; }
+    details[open] summary { color: var(--color-primary); }
     details[open] {
-      background-color: #dbf4ff;
-      border-color: #93c5fd;
+      border-color: var(--color-primary);
+      background-color: #e1eefe;
     }
-
     pre {
       margin: 0;
-      padding: 16px 20px;
-      font-family: 'Fira Mono', monospace, monospace;
+      padding: 14px 20px;
+      font-family: 'Fira Mono', monospace;
       font-size: 0.9rem;
-      background-color: #111827;
-      color: #d1d5db;
+      background-color: #1e1e2f;
+      color: #cddbff;
       white-space: pre-wrap;
-      word-wrap: break-word;
-      max-height: 280px;
+      max-height: 300px;
       overflow-y: auto;
       border-radius: 0 0 var(--border-radius) var(--border-radius);
-      border-top: 2px solid #2563eb;
-      transition: background-color var(--transition-fast), color var(--transition-fast);
-      box-shadow: inset 0 4px 8px rgba(0,0,0,0.8);
+      border-top: 2px solid var(--color-primary);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+      user-select: text;
     }
-
-    pre::-webkit-scrollbar {
-      height: 8px;
-      width: 8px;
-    }
-    pre::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    pre::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-    }
-
+    pre::-webkit-scrollbar { height: 8px; width: 8px; }
+    pre::-webkit-scrollbar-thumb { background: #8a8ecc88; border-radius: 10px; }
     .timestamp {
-      display: block;
-      margin-top: 4px;
       font-size: 0.8rem;
-      color: #6b7280;
+      color: #7a7a95;
+      margin-top: 5px;
       user-select: none;
+      display: block;
     }
-
-    #filterInput::placeholder {
-      font-style: italic;
-      color: #9ca3af;
-    }
-
-    #requests .no-requests {
+    .no-requests {
+      user-select: none;
       margin: 80px auto;
+      color: #9a9abb;
       text-align: center;
-      color: #9ca3af;
       font-size: 1.3rem;
-      user-select: none;
       opacity: 0.7;
-      padding: 80px 16px;
     }
-    #requests .no-requests svg {
+    .no-requests svg {
+      display: block;
+      margin: 0 auto 20px;
       width: 56px;
       height: 56px;
-      margin-bottom: 20px;
-      fill: #cbd5e1;
-      opacity: 0.7;
+      fill: #b3b3d1;
+      opacity: 0.6;
     }
-
-    /* Responsive */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 16px; }
     @media (max-width: 700px) {
       body {
         grid-template-columns: 1fr;
-        grid-template-rows: 60px auto auto 48px;
+        grid-template-rows: var(--header-height) auto auto 48px;
         grid-template-areas:
           "header"
           "sidebar"
@@ -558,470 +468,463 @@
           "footer";
       }
       .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 12px 16px;
+        gap: 16px;
         border-right: none;
         border-bottom: 1px solid #e0e7ff;
-        flex-direction: row;
-        align-items: center;
-        padding: 12px 16px;
-        overflow-x: auto;
-        gap: 16px;
       }
-      .sidebar > * {
-        flex: 1 1 auto;
-        min-width: auto;
-      }
-      #endpointInput {
-        width: 100%;
-        margin: 0;
-      }
-      button {
-        min-width: 130px;
-      }
-      .main {
-        height: 50vh;
-      }
-      table th, table td {
-        font-size: 0.9rem;
-      }
+      .sidebar > * { flex: 1 1 auto; min-width: 0; }
+      #endpointListContainer { max-height: 160px; }
+      #endpointList { max-height: 160px; }
+      #endpointList li { min-width: 280px; }
+      table th, table td { font-size: 0.9rem; }
+      th:last-child, td:last-child { min-width: unset; width: auto; }
     }
+    .endpoint-popover {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      min-width: 290px;
+      max-width: 95vw;
+      background: #fff;
+      color: #19192B;
+      border: 2px solid #2563eb;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(37,99,235,0.15), 0 1px 12px rgba(0,0,0,0.10);
+      padding: 20px 28px 20px 28px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: opacity 0.13s;
+      opacity: 0;
+      left: 40px;
+      top: 40px;
+      pointer-events: none;
+    }
+    .endpoint-popover.show {
+      display: block !important;
+      opacity: 1;
+      animation: popfadein 0.14s;
+      pointer-events: auto;
+    }
+    @keyframes popfadein { from {opacity: 0;} to {opacity: 1;} }
+    .popover-close {
+      display: block;
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      font-size: 1.3rem;
+      color: #999;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      width: 32px;
+      height: 32px;
+      line-height: 24px;
+    }
+    .popover-close:focus { outline: 2px solid #2563eb; }
   </style>
-
-  <!-- Google Identity Services script -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <header>
-    Webhook Receiver
-  </header>
+
+  <header>Webhook Receiver</header>
 
   <aside class="sidebar" role="complementary" aria-label="Endpoint controls">
-
-    <!-- Google Sign-In button container -->
-    <div id="g_id_signin"></div>
-
-    <!-- User info and logout button -->
-    <div id="userInfo">
-      <div id="userEmail"></div>
-      <button id="logoutBtn" aria-label="Logout from your account">Logout</button>
+    <div id="endpointListContainer" aria-label="List of your endpoints">
+      <h3>Endpoints</h3>
+      <ul id="endpointList" role="listbox" tabindex="0" aria-multiselectable="false"></ul>
     </div>
-
-    <button id="newEndpointBtn" aria-label="Create a new endpoint" disabled>Create New Endpoint</button>
-    <input id="endpointInput" type="text" aria-label="Enter or paste endpoint ID" placeholder="Enter your endpoint ID here" />
-    <button id="connectBtn" aria-label="Connect to the entered endpoint">Connect</button>
-    
-    <div id="endpointListContainer" aria-label="Your created endpoints" style="margin-top: 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-height: 220px; background-color: #fefefe; overflow-y: auto;">
-      <h3 style="margin: 8px 12px; font-weight: 700; font-size: 1.1rem; user-select: none; background-color:#fefefe; position: sticky; top:0; z-index: 1; border-bottom: 1px solid #e5e7eb;">Your Endpoints</h3>
-      <ul id="endpointList" tabindex="0" style="list-style:none; margin:0; padding:0; font-size: 0.9rem; max-height: 220px; overflow-y: auto;"></ul>
+    <div id="g_idsignin-container">
+      <div id="g_idsignin" aria-label="Google Sign-in Button" role="button"></div>
+    </div>
+    <button id="newEndpointBtn" disabled>Create New Endpoint</button>
+    <div id="userInfo" aria-live="polite" aria-atomic="true" aria-label="User Information">
+      <div id="userEmail" tabindex="0"></div>
+      <button id="logoutBtn" aria-label="Sign out from your account">Logout</button>
     </div>
   </aside>
 
   <main class="main" role="main">
-    <div id="endpointContainer" role="region" aria-label="Current endpoint URL, with copy button">
-      <div id="endpointUrl" aria-live="polite" aria-atomic="true" tabindex="0" title="Your endpoint URL will appear here"></div>
-      <button id="copyEndpointBtn" aria-label="Copy endpoint URL" title="Copy endpoint URL" disabled>Copy</button>
+    <div id="endpointContainer" aria-label="Current endpoint URL and copy button" aria-live="polite" aria-atomic="true">
+      <div id="endpointUrl" tabindex="0" title="Your endpoint URL will show here"></div>
+      <button id="copyEndpointBtn" disabled>Copy</button>
     </div>
-
-    <input type="text" id="filterInput" placeholder="Search requests by method or timestamp..." aria-label="Filter displayed requests" autocomplete="off" />
-
-    <div id="requests" aria-live="polite" aria-atomic="false" aria-relevant="additions"></div>
+    <div class="requests-container" aria-live="polite" aria-atomic="true" aria-relevant="additions" tabindex="0" role="region">
+      <div class="requests-scroll">
+        <div id="requests"></div>
+      </div>
+    </div>
   </main>
+  <footer>&copy; 2025 Webhook Receiver App</footer>
 
-  <footer>
-    &copy; 2024 Webhook Receiver App
-  </footer>
+  <!-- Endpoint popover -->
+  <div id="popover" class="endpoint-popover" tabindex="-1" style="display:none;">
+    <button class="popover-close" aria-label="Close">×</button>
+    <div class="popover-content"></div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     (function() {
       const socket = io();
 
-      // Elements
       const newEndpointBtn = document.getElementById('newEndpointBtn');
-      const connectBtn = document.getElementById('connectBtn');
-      const endpointInput = document.getElementById('endpointInput');
       const endpointUrl = document.getElementById('endpointUrl');
       const copyEndpointBtn = document.getElementById('copyEndpointBtn');
       const requestsDiv = document.getElementById('requests');
-      const filterInput = document.getElementById('filterInput');
-      const endpointListEl = document.getElementById('endpointList');
-
-      // Auth UI elements
-      const gSignInDiv = document.getElementById('g_id_signin');
-      const userInfoDiv = document.getElementById('userInfo');
-      const userEmailDiv = document.getElementById('userEmail');
+      const endpointList = document.getElementById('endpointList');
+      const g_idsignin = document.getElementById('g_idsignin');
+      const userInfo = document.getElementById('userInfo');
+      const userEmail = document.getElementById('userEmail');
       const logoutBtn = document.getElementById('logoutBtn');
+      const g_idsignin_container = document.getElementById('g_idsignin-container');
+      const popover = document.getElementById('popover');
+      const popoverContent = popover.querySelector('.popover-content');
+      const popoverClose = popover.querySelector('.popover-close');
 
       let currentEndpoint = null;
       let allRequests = [];
-      let endpoints = []; // array of {id, createdAt}
+      let endpoints = [];
       let authToken = null;
       let currentUser = null;
 
-      // Format timestamp helper
+      function showPopover(html, anchorElem) {
+        popoverContent.innerHTML = html;
+        popover.classList.add('show');
+        popover.style.display = 'block';
+        let rect = anchorElem.getBoundingClientRect();
+        let vpW = window.innerWidth || document.documentElement.clientWidth;
+        let left = rect.left + rect.width/2 - 180;
+        if(left < 20) left = 20;
+        if(left + 340 > vpW) left = vpW - 360;
+        let top = rect.top - 160;
+        if(top < 24 || top + 160 < 0) top = rect.bottom + 18;
+        popover.style.left = left + 'px';
+        popover.style.top = top + 'px';
+        popover.focus();
+      }
+      function hidePopover() {
+        popover.classList.remove('show');
+        popover.style.display = 'none';
+        popoverContent.innerHTML = '';
+      }
+      popoverClose.onclick = hidePopover;
+      window.addEventListener('keydown', function(e){ if(e.key==="Escape") hidePopover(); });
+      window.addEventListener('mousedown', function(e){
+        if(popover.classList.contains('show') && !popover.contains(e.target)) hidePopover();
+      });
+
       function formatTimestamp(iso) {
         const dt = new Date(iso);
-        if (isNaN(dt)) return iso;
+        if (Number.isNaN(dt.getTime())) return iso;
         return dt.toLocaleString();
       }
 
-      // Method badge creation
       function createMethodBadge(method) {
-        const methodUpper = (method || '').toUpperCase();
-        const valid = ['GET','POST','PUT','DELETE','PATCH'].includes(methodUpper) ? methodUpper : 'OTHER';
+        const m = (method || 'OTHER').toUpperCase();
+        const known = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+        const key = known.includes(m) ? m : 'OTHER';
         const span = document.createElement('span');
-        span.className = 'method-badge ' + valid;
-        span.setAttribute('title', `HTTP Method: ${valid}`);
-        span.textContent = valid;
+        span.className = 'method-badge ' + key;
+        span.title = `HTTP Method: ${key}`;
+        span.textContent = key;
         return span;
       }
 
-      // Render single request row
-      function renderRequestRow(req, index) {
+      function renderRequestRow(req, idx) {
         const tr = document.createElement('tr');
-
         const tdNum = document.createElement('td');
-        tdNum.innerHTML = `<strong>#${index + 1}</strong><span class="timestamp">${formatTimestamp(req.timestamp)}</span>`;
+        tdNum.innerHTML = `<strong>#${idx + 1}</strong><span class="timestamp">${formatTimestamp(req.timestamp)}</span>`;
         tr.appendChild(tdNum);
 
-        const tdMethod = document.createElement('td');
-        tdMethod.appendChild(createMethodBadge(req.method));
-        tr.appendChild(tdMethod);
-
         const tdDetails = document.createElement('td');
-
-        function createDetails(summaryText, jsonObj) {
-          const details = document.createElement('details');
-          details.open = false;
-
-          const summary = document.createElement('summary');
-          summary.textContent = summaryText + ` (${Object.keys(jsonObj || {}).length})`;
-          details.appendChild(summary);
-
+        function createDetail(name, obj) {
+          const dtl = document.createElement('details');
+          dtl.open = false;
+          const sum = document.createElement('summary');
+          sum.textContent = `${name} (${Object.keys(obj || {}).length})`;
+          if(name === 'Headers') sum.appendChild(createMethodBadge(req.method));
+          dtl.appendChild(sum);
           const pre = document.createElement('pre');
-          try {
-            pre.textContent = JSON.stringify(jsonObj || {}, null, 2);
-          } catch(e) {
-            pre.textContent = 'Invalid JSON';
-          }
-          details.appendChild(pre);
-          return details;
+          try { pre.textContent = JSON.stringify(obj || {}, null, 2); }
+          catch { pre.textContent = 'Invalid JSON'; }
+          dtl.appendChild(pre);
+          return dtl;
         }
-
-        tdDetails.appendChild(createDetails('Query Parameters', req.query));
-        tdDetails.appendChild(createDetails('Headers', req.headers));
-        tdDetails.appendChild(createDetails('Body', req.body && typeof req.body === 'object' ? req.body : { value: req.body === undefined ? '(empty)' : req.body }));
-
+        tdDetails.appendChild(createDetail('Query Parameters', req.query));
+        tdDetails.appendChild(createDetail('Headers', req.headers));
+        tdDetails.appendChild(createDetail('Body', typeof req.body === 'object' ? req.body : { value: req.body || '(empty)' }));
         tr.appendChild(tdDetails);
-
         return tr;
       }
 
-      // Render table of requests
       function renderTable(requests) {
-        if (!requests || requests.length === 0) {
+        requestsDiv.textContent = '';
+        if (!requests.length) {
           requestsDiv.innerHTML = `
-            <div class="no-requests" role="alert" aria-live="assertive">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1010 10A10 10 0 0012 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+            <div class="no-requests" role="alert" aria-live="assertive" tabindex="0">
+              <svg role="img" aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12" y2="16"></line>
+              </svg>
               No requests have been received yet.
             </div>`;
           return;
         }
-
-        const table = document.createElement('table');
+        const tbl = document.createElement('table');
         const thead = document.createElement('thead');
         thead.innerHTML = `
           <tr>
-            <th scope="col">#</th>
-            <th scope="col">Method</th>
-            <th scope="col">Details</th>
-          </tr>
-        `;
-        table.appendChild(thead);
+            <th scope="col">Request Info</th>
+            <th scope="col">Request Data</th>
+          </tr>`;
+        tbl.appendChild(thead);
 
         const tbody = document.createElement('tbody');
-        requests.forEach((req, i) => {
-          tbody.appendChild(renderRequestRow(req, i));
+        requests.forEach((r, i) => {
+          tbody.appendChild(renderRequestRow(r, i));
         });
-        table.appendChild(tbody);
+        tbl.appendChild(tbody);
 
-        requestsDiv.innerHTML = '';
-        requestsDiv.appendChild(table);
+        requestsDiv.appendChild(tbl);
       }
 
-      // Filter displayed requests by method, timestamp, or body content
-      function renderFilteredRequests() {
-        const filter = filterInput.value.trim().toLowerCase();
-        let filtered = allRequests;
-        if (filter) {
-          filtered = allRequests.filter(req => {
-            return (
-              (req.method && req.method.toLowerCase().includes(filter)) ||
-              (req.timestamp && req.timestamp.toLowerCase().includes(filter)) ||
-              JSON.stringify(req.body).toLowerCase().includes(filter)
-            );
-          });
-        }
-        renderTable(filtered);
-      }
-
-      // Load endpoints with authentication token
       async function loadEndpoints() {
         if (!authToken) return;
         try {
-          const response = await fetch('/endpoints', {
-            headers: {
-              'Authorization': `Bearer ${authToken}`
-            }
-          });
-          if (!response.ok) throw new Error('Failed to load endpoints');
-          const data = await response.json();
-          endpoints = data;
-
-          endpointListEl.innerHTML = '';
-
-          if (endpoints.length === 0) {
+          const res = await fetch('/endpoints', { headers: { 'Authorization': `Bearer ${authToken}` } });
+          if (!res.ok) throw new Error('Failed to load endpoints');
+          endpoints = await res.json();
+          endpointList.textContent = '';
+          if (!endpoints.length) {
             const li = document.createElement('li');
             li.textContent = 'No endpoints created yet.';
             li.style.fontStyle = 'italic';
             li.tabIndex = -1;
-            endpointListEl.appendChild(li);
+            endpointList.appendChild(li);
             return;
           }
-
           endpoints.forEach(ep => {
             const li = document.createElement('li');
             const span = document.createElement('span');
-            span.textContent = `${ep.id} (Created: ${new Date(ep.createdAt).toLocaleString()})`;
-            span.style.flex = '1';
+            span.className = 'endpoint-name';
+            span.textContent = ep.name ? ep.name : ep.id;
 
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Delete';
-            delBtn.className = 'delete-endpoint-btn';
-            delBtn.onclick = async (e) => {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'actions';
+
+            const delBTn = document.createElement('button');
+            delBTn.textContent = 'Delete';
+            delBTn.className = 'delete-endpoint-btn';
+            delBTn.onclick = async e => {
               e.stopPropagation();
-              if (confirm('Are you sure you want to delete this endpoint and all its requests?')) {
-                try {
-                  const res = await fetch(`/endpoints/${ep.id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                  });
-                  if (!res.ok) throw new Error('Failed to delete endpoint');
-                  await loadEndpoints();
-                  if (currentEndpoint === ep.id) {
-                    currentEndpoint = null;
-                    endpointInput.value = '';
-                    endpointUrl.textContent = '';
-                    copyEndpointBtn.disabled = true;
-                    allRequests = [];
-                    renderTable(allRequests);
-                  }
-                } catch(err) {
-                  alert('Error deleting endpoint: ' + err.message);
+              if (!confirm('Are you sure to delete this endpoint and its requests?')) return;
+              try {
+                const res = await fetch(`/endpoints/${ep.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authToken}` } });
+                if (!res.ok) throw new Error('Delete failed');
+                await loadEndpoints();
+                if (currentEndpoint === ep.id) {
+                  currentEndpoint = null;
+                  endpointUrl.textContent = '';
+                  copyEndpointBtn.disabled = true;
+                  allRequests = [];
+                  renderTable(allRequests);
                 }
+              } catch (err) {
+                alert('Error: ' + err.message);
               }
             };
 
-            li.appendChild(span);
-            li.appendChild(delBtn);
-            li.tabIndex = 0;
-            li.setAttribute('role', 'option');
-            li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
-            li.onclick = () => selectEndpoint(ep.id);
-            li.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectEndpoint(ep.id); } };
+            const infoIcon = document.createElement('span');
+            infoIcon.className = 'info-icon';
+            infoIcon.tabIndex = 0;
+            infoIcon.setAttribute('role', 'button');
+            infoIcon.setAttribute('aria-label', `Show endpoint info`);
+            infoIcon.textContent = 'i';
+            infoIcon.onclick = function(ev) {
+              ev.stopPropagation();
+              const html = `
+                <b>Endpoint Name:</b> <span>${(ep.name||ep.id)}</span><br>
+                <b>ID:</b> <span>${ep.id}</span><br>
+                <b>Created At:</b> <span>${formatTimestamp(ep.createdAt)}</span><br>
+                <b>Webhook URL:</b> <span style="word-break: break-all">${location.protocol}//${location.host}/${ep.id}</span>
+              `;
+              showPopover(html, infoIcon);
+            };
+            infoIcon.onkeydown = function(ev) {
+              if(ev.key===' '||ev.key==='Enter') { ev.preventDefault(); infoIcon.click(); }
+            };
 
-            endpointListEl.appendChild(li);
+            actionsDiv.appendChild(delBTn);
+            actionsDiv.appendChild(infoIcon);
+
+            li.appendChild(span);
+            li.appendChild(actionsDiv);
+
+            li.tabIndex = 0;
+            li.role = 'option';
+            li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
+            li.onclick = () => {
+              currentEndpoint = ep.id;
+              endpointUrl.textContent = `${location.protocol}//${location.host}/${ep.id}`;
+              copyEndpointBtn.disabled = false;
+              allRequests = [];
+              renderTable(allRequests);
+              socket.emit('join', ep.id);
+              [...endpointList.children].forEach(childLi => {
+                childLi.setAttribute('aria-selected', childLi === li ? 'true' : 'false');
+              });
+            };
+            li.onkeydown = e => {
+              if(e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                currentEndpoint = ep.id;
+                endpointUrl.textContent = `${location.protocol}//${location.host}/${ep.id}`;
+                copyEndpointBtn.disabled = false;
+                allRequests = [];
+                renderTable(allRequests);
+                socket.emit('join', ep.id);
+                [...endpointList.children].forEach(childLi => {
+                  childLi.setAttribute('aria-selected', childLi === li ? 'true' : 'false');
+                });
+              }
+            };
+            endpointList.appendChild(li);
           });
         } catch (err) {
-          console.error('Cannot load endpoints:', err);
-          endpointListEl.innerHTML = '<li><em>Error loading endpoints.</em></li>';
+          endpointList.innerHTML = `<li><em>Error loading endpoints.</em></li>`;
         }
       }
 
-      // Select and join endpoint room
-      function selectEndpoint(id) {
-        if (currentEndpoint === id) return;
-
-        currentEndpoint = id;
-        endpointInput.value = id;
-        endpointUrl.textContent = `Your endpoint URL: ${location.protocol}//${location.host}/${id}`;
-        copyEndpointBtn.disabled = false;
-        allRequests = [];
-        renderTable(allRequests);
-        socket.emit('join', id);
-        filterInput.value = '';
-
-        [...endpointListEl.children].forEach(li => {
-          li.setAttribute('aria-selected', li.textContent.startsWith(id) ? 'true' : 'false');
-        });
-      }
-
-      // Create new endpoint; protected route
-      newEndpointBtn.onclick = async () => {
-        if (!authToken) {
-          alert('Please sign in to create a new endpoint.');
+      copyEndpointBtn.onclick = () => {
+        const txt = endpointUrl.textContent.trim();
+        if (!txt) {
+          alert("No URL available.");
           return;
         }
-        try {
-          const res = await fetch('/new', {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-          });
-          if (!res.ok) throw new Error('Failed to create new endpoint');
-          const data = await res.json();
-          await loadEndpoints();
-          selectEndpoint(data.id);
-        } catch (e) {
-          alert('Error creating new endpoint: ' + e.message);
-        }
-      };
-
-      // Connect to endpoint by ID
-      connectBtn.onclick = () => {
-        const id = endpointInput.value.trim();
-        if (!id) return alert('Please enter an endpoint ID');
-        selectEndpoint(id);
-      };
-
-      // Copy endpoint URL to clipboard
-      copyEndpointBtn.addEventListener('click', () => {
-        const urlText = endpointUrl.textContent.replace(/^Your endpoint URL:\s*/, '').trim();
-        if (!urlText) {
-          alert('No endpoint URL to copy');
-          return;
-        }
-
-        navigator.clipboard.writeText(urlText).then(() => {
+        navigator.clipboard.writeText(txt).then(() => {
           copyEndpointBtn.textContent = 'Copied!';
           copyEndpointBtn.disabled = true;
           setTimeout(() => {
             copyEndpointBtn.textContent = 'Copy';
             copyEndpointBtn.disabled = false;
           }, 2000);
-        }).catch(() => {
-          alert('Failed to copy to clipboard');
-        });
-      });
-
-      // Socket.IO event listeners
-      socket.on('init_requests', (reqs) => {
-        allRequests = reqs.slice();
-        renderFilteredRequests();
-      });
-
-      socket.on('new_request', (req) => {
-        allRequests.unshift(req);
-        renderFilteredRequests();
-      });
-
-      socket.on('error', (msg) => alert(msg));
-
-      filterInput.addEventListener('input', () => {
-        renderFilteredRequests();
-      });
-
-      // Google Sign-In Setup
-
-      // Called when Google returns credential response after signin
-      async function handleCredentialResponse(response) {
-        const token = response.credential;
-        if (!token) {
-          alert('Google sign-in failed: no token received');
-          return;
-        }
-
-        try {
-          // Send token to backend for verification
-          const res = await fetch('/auth/google', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-          });
-
-          if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.error || 'Google authentication failed');
-          }
-
-          const data = await res.json();
-          authToken = token;  // Store Google ID token for auth in all requests
-          currentUser = data.user;
-
-          updateUIOnSignIn();
-          await loadEndpoints();
-        } catch (err) {
-          alert('Authentication error: ' + err.message);
-          googleLogout();
-        }
-      }
-
-      // Initialize Google Sign-In button
-      window.onload = () => {
-        google.accounts.id.initialize({
-          client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com', // Replace with your actual client ID
-          callback: handleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true
-        });
-
-        google.accounts.id.renderButton(
-          gSignInDiv,
-          { theme: 'outline', size: 'large', width: '100%', locale: 'en' }
-        );
-
-        google.accounts.id.prompt(); // Display the One Tap prompt if eligible
-
-        checkStoredSession();
+        }, () => alert("Copy failed"));
       };
 
-      // Update UI when signed in
+      socket.on('init_requests', data => {
+        allRequests = [...data];
+        renderTable(allRequests);
+      });
+      socket.on('new_request', req => {
+        allRequests.unshift(req);
+        renderTable(allRequests);
+      });
+      socket.on('error', msg => alert(msg));
+
+      newEndpointBtn.onclick = async () => {
+        if (!authToken) {
+          alert('Please sign in to create a new endpoint.');
+          return;
+        }
+        let name = prompt("Enter a descriptive name for your new webhook endpoint (optional):", "");
+        if (name !== null) name = name.trim();
+        try {
+          const res = await fetch('/new', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: name || undefined })
+          });
+          if (!res.ok) throw new Error('Create failed');
+          const data = await res.json();
+          await loadEndpoints();
+          currentEndpoint = data.id;
+          endpointUrl.textContent = `${location.protocol}//${location.host}/${data.id}`;
+          copyEndpointBtn.disabled = false;
+          allRequests = [];
+          renderTable(allRequests);
+          socket.emit('join', data.id);
+          [...endpointList.children].forEach(li => {
+            li.setAttribute('aria-selected', li.textContent.startsWith(data.id) ? 'true' : 'false');
+          });
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      };
+
+      function handleCredentialResponse(response) {
+        if (!response.credential) {
+          alert("Missing credentials");
+          return;
+        }
+        fetch('/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: response.credential }),
+        }).then(r => {
+          if (!r.ok) throw new Error('Authentication failed');
+          return r.json();
+        }).then(data => {
+          authToken = response.credential;
+          currentUser = data.user;
+          updateUIOnSignIn();
+          return loadEndpoints();
+        }).catch(err => {
+          alert('Authentication error: ' + err.message);
+          googleLogout();
+        });
+      }
       function updateUIOnSignIn() {
-        gSignInDiv.style.display = 'none';
-        userInfoDiv.style.display = 'flex';
-        userEmailDiv.textContent = currentUser.email || 'Logged in user';
+        g_idsignin_container.style.display = 'none';
+        userInfo.style.display = 'flex';
+        userEmail.textContent = currentUser.email;
         newEndpointBtn.disabled = false;
       }
-
-      // Update UI when signed out
       function updateUIOnSignOut() {
-        gSignInDiv.style.display = 'block';
-        userInfoDiv.style.display = 'none';
-        userEmailDiv.textContent = '';
+        g_idsignin_container.style.display = 'block';
+        userInfo.style.display = 'none';
+        userEmail.textContent = '';
         newEndpointBtn.disabled = true;
-
-        // Clear data
         currentEndpoint = null;
-        endpointInput.value = '';
         endpointUrl.textContent = '';
         copyEndpointBtn.disabled = true;
         allRequests = [];
         renderTable(allRequests);
-        endpointListEl.innerHTML = '';
+        endpointList.textContent = '';
       }
-
-      // Handle logout
-      logoutBtn.onclick = () => {
-        googleLogout();
-      };
-
-      // Clear token and UI state on logout
+      logoutBtn.onclick = () => googleLogout();
       function googleLogout() {
         authToken = null;
         currentUser = null;
         updateUIOnSignOut();
-        // Also inform Google to revoke token if desired (optional)
         google.accounts.id.disableAutoSelect();
       }
-
-      // Load user session from token if stored
       function checkStoredSession() {
-        // For simplicity, no token persistence is implemented here.
-        // You can extend this with localStorage/sessionStorage if wanted.
-        // On page load, user must sign in again.
         updateUIOnSignOut();
       }
-
-      // Load the endpoints initially if logged in
-      // (This happens in handleCredentialResponse after sign-in)
-
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
+          callback: handleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+        google.accounts.id.renderButton(g_idsignin, {
+          theme: 'outline',
+          size: 'large',
+          width: '100%',
+          locale: 'en',
+        });
+        google.accounts.id.prompt();
+        checkStoredSession();
+      };
     })();
   </script>
 </body>
