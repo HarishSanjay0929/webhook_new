@@ -127,13 +127,13 @@
       background-color: #f44336;
       border: none;
       color: #fff;
-      font-size: 0.85em; /* smaller font */
+      font-size: 0.85em;
       font-weight: 600;
       border-radius: 5px;
-      padding: 2px 6px;  /* less padding */
+      padding: 2px 6px;
       cursor: pointer;
       min-width: 0;
-      max-width: 50px;   /* narrower max width */
+      max-width: 50px;
     }
     .endpoint-actions button:hover { background-color: #b71c1c; }
     .sidebar button, .sidebar input[type=button] {
@@ -165,7 +165,7 @@
       color: #fff;
       padding: 10px 12px;
       border-radius: 7px;
-      margin-top: auto; /* push user info to the bottom */
+      margin-top: auto;
       font-size: 0.95rem;
       display: none;
       flex-direction: column;
@@ -407,6 +407,33 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
+
+<!-- Connection lost banner -->
+<div id="connectionBanner" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%;
+  background:#ff4747;
+  color:#fff;
+  font-weight:700;
+  padding:12px 0;
+  text-align:center;
+  z-index:999;
+">
+  Connection lost.
+  <button id="reloadBtn" style="
+    margin-left:15px;
+    background:#fff;
+    color:#ff4747;
+    border:none;
+    padding:6px 14px;
+    border-radius:5px;
+    font-weight:700;
+    cursor:pointer;
+  ">Reload</button>
+</div>
+
 <div class="layout">
   <aside class="sidebar" aria-label="Sidebar">
     <div class="sidebar-header">Webhook Receiver</div>
@@ -444,8 +471,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
   (function() {
-    const socket = io();
-
+    // DOM elements
     const newEndpointBtn = document.getElementById('newEndpointBtn');
     const endpointUrl = document.getElementById('endpointUrl');
     const copyEndpointBtn = document.getElementById('copyEndpointBtn');
@@ -457,7 +483,11 @@
     const logoutBtn = document.getElementById('logoutBtn');
     const g_idsignin_container = document.getElementById('g_idsignin-container');
     const toggleAllBtn = document.getElementById('toggleAllDetailsBtn');
+    const connectionBanner = document.getElementById('connectionBanner');
+    const reloadBtn = document.getElementById('reloadBtn');
 
+    let socket = null;
+    let socketConnected = true;
     let currentEndpoint = null;
     let allRequests = [];
     let endpoints = [];
@@ -618,7 +648,7 @@
       copyEndpointBtn.disabled = false;
       allRequests = [];
       renderTable(allRequests);
-      socket.emit('join', id);
+      if (socketConnected && socket) socket.emit('join', id);
       [...endpointList.children].forEach(li => {
         li.classList.toggle('selected', li.querySelector('.list-label')?.textContent === (endpoints.find(ep => ep.id === id)?.name || id));
         li.setAttribute('aria-selected', li.classList.contains('selected') ? 'true' : 'false');
@@ -641,21 +671,51 @@
       }).catch(() => alert("Copy failed"));
     };
 
-    socket.on('init_requests', data => {
-      allRequests = [...data];
-      renderTable(allRequests);
-      allOpen = false;
-      toggleAllBtn.textContent = 'Show All Details';
-      toggleAllBtn.setAttribute('aria-pressed', 'false');
+    function connectSocket() {
+      socket = io({ reconnection: true, reconnectionAttempts: 10, reconnectionDelay: 1000 });
+
+      socket.on('disconnect', () => {
+        socketConnected = false;
+        connectionBanner.style.display = 'block';
+      });
+
+      reloadBtn.onclick = () => window.location.reload();
+
+      socket.on('connect', () => {
+        socketConnected = true;
+        connectionBanner.style.display = 'none';
+        if (currentEndpoint) socket.emit('join', currentEndpoint);
+      });
+
+      socket.on('connect_error', err => {
+        console.error('Socket.IO connect error:', err);
+        connectionBanner.style.display = 'block';
+      });
+
+      socket.on('init_requests', data => {
+        allRequests = [...data];
+        renderTable(allRequests);
+        allOpen = false;
+        toggleAllBtn.textContent = 'Show All Details';
+        toggleAllBtn.setAttribute('aria-pressed', 'false');
+      });
+
+      socket.on('new_request', req => {
+        allRequests.unshift(req);
+        renderTable(allRequests);
+        allOpen = false;
+        toggleAllBtn.textContent = 'Show All Details';
+        toggleAllBtn.setAttribute('aria-pressed', 'false');
+      });
+
+      socket.on('error', msg => alert(msg));
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === 'visible' && !socketConnected) {
+        window.location.reload();
+      }
     });
-    socket.on('new_request', req => {
-      allRequests.unshift(req);
-      renderTable(allRequests);
-      allOpen = false;
-      toggleAllBtn.textContent = 'Show All Details';
-      toggleAllBtn.setAttribute('aria-pressed', 'false');
-    });
-    socket.on('error', msg => alert(msg));
 
     newEndpointBtn.onclick = async () => {
       if (!authToken) {
@@ -758,9 +818,11 @@
         locale: 'en',
       });
       google.accounts.id.prompt();
+      connectSocket();
       checkStoredSession();
     };
   })();
 </script>
+
 </body>
 </html>

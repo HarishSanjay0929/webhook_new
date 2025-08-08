@@ -47,6 +47,7 @@ app.post('/auth/google', async (req, res) => {
   }
 });
 
+// Auth middleware
 async function authenticateGoogleToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).send('Unauthorized: No token provided');
@@ -65,6 +66,7 @@ async function authenticateGoogleToken(req, res, next) {
   }
 }
 
+// Create new endpoint
 app.post('/new', authenticateGoogleToken, async (req, res) => {
   const id = uuidv4();
   const { name } = req.body;
@@ -86,6 +88,7 @@ app.post('/new', authenticateGoogleToken, async (req, res) => {
   }
 });
 
+// Get endpoints for user
 app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   try {
     const endpoints = await endpointsCollection
@@ -107,6 +110,7 @@ app.get('/endpoints', authenticateGoogleToken, async (req, res) => {
   }
 });
 
+// Delete endpoint
 app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   const endpointId = req.params.id;
   try {
@@ -119,6 +123,7 @@ app.delete('/endpoints/:id', authenticateGoogleToken, async (req, res) => {
   }
 });
 
+// Webhook receiver route
 app.all('/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -147,8 +152,10 @@ app.all('/:id', async (req, res) => {
   }
 });
 
+// Serve frontend (public folder)
 app.use(express.static('public'));
 
+// Socket.IO live connection handler (supports reconnection via the frontend)
 io.on('connection', (socket) => {
   socket.on('join', async (endpointId) => {
     try {
@@ -175,6 +182,14 @@ io.on('connection', (socket) => {
       socket.emit('error', 'Internal server error');
     }
   });
+
+  // OPTIONAL: Heartbeat ping to allow frontend to detect stale connection (uncomment if needed)
+  /*
+  const heartbeatInterval = setInterval(() => {
+    socket.emit('heartbeat', { time: Date.now() });
+  }, 60000);
+  socket.on('disconnect', () => clearInterval(heartbeatInterval));
+  */
 });
 
 connectMongo().then(() => {
