@@ -318,8 +318,9 @@
       max-width: 100vw;
       box-sizing: border-box;
     }
+    /* Increased width from 82px to 120px */
     th:first-child, td:first-child {
-      width: 82px;
+      width: 120px;
       text-align: center;
     }
     tbody tr:hover { background: #e3f3fc; }
@@ -501,7 +502,7 @@
     let currentUser = null;
     let allOpen = false;
 
-    // We'll maintain an array of booleans or a Set keyed by index to track viewed requests
+    // Set to keep track of viewed requests by index
     let viewedRequests = new Set();
 
     function formatTimestamp(iso) {
@@ -524,7 +525,7 @@
     function renderRequestRow(req, idx) {
       const tr = document.createElement('tr');
 
-      // Add class 'unopened' if this request has not been viewed/opened yet
+      // Highlight unopened requests
       if (!viewedRequests.has(idx)) {
         tr.classList.add('unopened');
       }
@@ -539,10 +540,8 @@
         const dtl = document.createElement('details');
         dtl.open = allOpen;
 
-        // Add event listener to mark this request as viewed when details are opened
-        dtl.addEventListener('toggle', (event) => {
-          if (dtl.open) {
-            // Mark request as viewed (remove highlight)
+        dtl.addEventListener('toggle', () => {
+          if (dtl.open && !viewedRequests.has(idx)) {
             viewedRequests.add(idx);
             tr.classList.remove('unopened');
           }
@@ -591,13 +590,14 @@
       allOpen = !allOpen;
       toggleAllBtn.textContent = allOpen ? 'Hide All Details' : 'Show All Details';
       toggleAllBtn.setAttribute('aria-pressed', allOpen.toString());
-      requestsDiv.querySelectorAll('details').forEach(d => d.open = allOpen);
+      requestsDiv.querySelectorAll('details').forEach(d => {
+        if (d.open !== allOpen) d.open = allOpen;
+      });
+
       if (allOpen) {
-        // Mark all requests as viewed if opened all details
         for (let i = 0; i < allRequests.length; i++) {
           viewedRequests.add(i);
         }
-        // Remove highlight from all rows
         const trs = requestsDiv.querySelectorAll('tbody tr.unopened');
         trs.forEach(tr => tr.classList.remove('unopened'));
       }
@@ -739,8 +739,6 @@
 
       socket.on('new_request', req => {
         allRequests.unshift(req);
-        // Mark new request as not viewed (no addition to viewedRequests set)
-        // Re-render table so new row is highlighted
         renderTable(allRequests);
         allOpen = false;
         toggleAllBtn.textContent = 'Show All Details';
@@ -844,7 +842,6 @@
     }
 
     window.onload = () => {
-      // *** Replace with your actual Google Client ID ***
       google.accounts.id.initialize({
         client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
         callback: handleCredentialResponse,
