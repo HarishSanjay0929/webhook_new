@@ -324,13 +324,11 @@
       text-align: center;
     }
     tbody tr:hover { background: #e3f3fc; }
-
     /* Highlight unopened requests */
     tbody tr.unopened {
       background-color: #fff9db;
       font-weight: 700;
     }
-
     .method-badge {
       display: inline-block;
       background: var(--primary);
@@ -415,7 +413,6 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-
 <!-- Connection lost banner -->
 <div id="connectionBanner" style="
   display:none;
@@ -441,7 +438,6 @@
     cursor:pointer;
   ">Reload</button>
 </div>
-
 <div class="layout">
   <aside class="sidebar" aria-label="Sidebar">
     <div class="sidebar-header">Payload Box</div>
@@ -459,7 +455,6 @@
     </div>
     <div class="sidebar-footer">&copy; 2025 Webhook Receiver App</div>
   </aside>
-
   <main class="main-area" aria-label="Main content">
     <div class="main-inner-content">
       <div class="endpoint-url-row">
@@ -475,7 +470,6 @@
     </div>
   </main>
 </div>
-
 <script src="/socket.io/socket.io.js"></script>
 <script>
   (function() {
@@ -493,6 +487,9 @@
     const connectionBanner = document.getElementById('connectionBanner');
     const reloadBtn = document.getElementById('reloadBtn');
 
+    const STORAGE_KEY = 'webhookAuthToken';
+    const STORAGE_TIME_KEY = 'webhookAuthTokenTime';
+
     let socket = null;
     let socketConnected = true;
     let currentEndpoint = null;
@@ -504,6 +501,31 @@
 
     // Set to keep track of viewed requests by index
     let viewedRequests = new Set();
+
+    // Save token and login time
+    function saveLogin(token) {
+      localStorage.setItem(STORAGE_KEY, token);
+      localStorage.setItem(STORAGE_TIME_KEY, Date.now());
+    }
+
+    // Clear token and time
+    function clearLogin() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME_KEY);
+    }
+
+    // Load token if still valid (within 24 hours)
+    function loadLogin() {
+      const token = localStorage.getItem(STORAGE_KEY);
+      const time = localStorage.getItem(STORAGE_TIME_KEY);
+      if (!token || !time) return null;
+      const elapsed = Date.now() - Number(time);
+      if (elapsed > 24 * 60 * 60 * 1000) {
+        clearLogin();
+        return null;
+      }
+      return token;
+    }
 
     function formatTimestamp(iso) {
       const dt = new Date(iso);
@@ -524,29 +546,23 @@
 
     function renderRequestRow(req, idx) {
       const tr = document.createElement('tr');
-
       // Highlight unopened requests
       if (!viewedRequests.has(idx)) {
         tr.classList.add('unopened');
       }
-
       const tdNum = document.createElement('td');
       tdNum.innerHTML = `<strong>#${idx + 1}</strong><br><small>${formatTimestamp(req.timestamp)}</small>`;
       tr.appendChild(tdNum);
-
       const tdDetails = document.createElement('td');
-
       function createDetail(name, obj) {
         const dtl = document.createElement('details');
         dtl.open = allOpen;
-
         dtl.addEventListener('toggle', () => {
           if (dtl.open && !viewedRequests.has(idx)) {
             viewedRequests.add(idx);
             tr.classList.remove('unopened');
           }
         });
-
         const sum = document.createElement('summary');
         sum.textContent = `${name} (${Object.keys(obj || {}).length})`;
         if (name === 'Headers') sum.appendChild(createMethodBadge(req.method));
@@ -557,12 +573,10 @@
         dtl.appendChild(pre);
         return dtl;
       }
-
       tdDetails.appendChild(createDetail('Query Parameters', req.query));
       tdDetails.appendChild(createDetail('Headers', req.headers));
       tdDetails.appendChild(createDetail('Body', typeof req.body === 'object' ? req.body : { value: req.body || '(empty)' }));
       tr.appendChild(tdDetails);
-
       return tr;
     }
 
@@ -576,13 +590,11 @@
       const thead = document.createElement('thead');
       thead.innerHTML = `<tr><th># & Timestamp</th><th>Request Data</th></tr>`;
       tbl.appendChild(thead);
-
       const tbody = document.createElement('tbody');
       requests.forEach((r, i) => {
         tbody.appendChild(renderRequestRow(r, i));
       });
       tbl.appendChild(tbody);
-
       requestsDiv.appendChild(tbl);
     }
 
@@ -593,7 +605,6 @@
       requestsDiv.querySelectorAll('details').forEach(d => {
         if (d.open !== allOpen) d.open = allOpen;
       });
-
       if (allOpen) {
         for (let i = 0; i < allRequests.length; i++) {
           viewedRequests.add(i);
@@ -624,14 +635,11 @@
           li.setAttribute('role', 'option');
           li.className = (ep.id === currentEndpoint) ? 'selected' : '';
           li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
-
           const spanName = document.createElement('span');
           spanName.className = 'list-label';
           spanName.textContent = ep.name || ep.id;
-
           const actions = document.createElement('div');
           actions.className = 'endpoint-actions';
-
           const delBtn = document.createElement('button');
           delBtn.textContent = 'Delete';
           delBtn.title = 'Delete this endpoint';
@@ -658,10 +666,8 @@
             }
           };
           actions.appendChild(delBtn);
-
           li.appendChild(spanName);
           li.appendChild(actions);
-
           li.onclick = () => selectEndpoint(ep.id);
           li.onkeydown = e => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -669,7 +675,6 @@
               selectEndpoint(ep.id);
             }
           };
-
           endpointList.appendChild(li);
         });
       } catch (err) {
@@ -779,6 +784,31 @@
       }
     };
 
+    // Save token and timestamp on successful login
+    function saveLogin(token) {
+      localStorage.setItem(STORAGE_KEY, token);
+      localStorage.setItem(STORAGE_TIME_KEY, Date.now());
+    }
+
+    // Clear stored token on logout
+    function clearLogin() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME_KEY);
+    }
+
+    // Load token if not expired (>24h = expired)
+    function loadLogin() {
+      const token = localStorage.getItem(STORAGE_KEY);
+      const time = localStorage.getItem(STORAGE_TIME_KEY);
+      if (!token || !time) return null;
+      if ((Date.now() - Number(time)) > 24 * 60 * 60 * 1000) {
+        clearLogin();
+        return null;
+      }
+      return token;
+    }
+
+    // Modified to save token persistently
     function handleCredentialResponse(response) {
       if (!response.credential) {
         alert("Missing credentials");
@@ -793,6 +823,7 @@
         return r.json();
       }).then(data => {
         authToken = response.credential;
+        saveLogin(authToken); // Persist login token
         currentUser = data.user;
         updateUIOnSignIn();
         return loadEndpoints();
@@ -830,15 +861,37 @@
 
     logoutBtn.onclick = () => googleLogout();
 
+    // Clear saved token on logout
     function googleLogout() {
       authToken = null;
       currentUser = null;
+      clearLogin();
       updateUIOnSignOut();
       google.accounts.id.disableAutoSelect();
     }
 
+    // Load stored token on page load and validate it
     function checkStoredSession() {
-      updateUIOnSignOut();
+      const savedToken = loadLogin();
+      if (savedToken) {
+        authToken = savedToken;
+        fetch('/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: authToken }),
+        }).then(r => {
+          if (!r.ok) throw new Error('Authentication failed');
+          return r.json();
+        }).then(data => {
+          currentUser = data.user;
+          updateUIOnSignIn();
+          loadEndpoints();
+        }).catch(() => {
+          googleLogout();
+        });
+      } else {
+        updateUIOnSignOut();
+      }
     }
 
     window.onload = () => {
@@ -860,6 +913,5 @@
     };
   })();
 </script>
-
 </body>
 </html>
