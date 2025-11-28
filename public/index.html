@@ -1,0 +1,2084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Payload Box - Webhook Receiver</title>
+  <meta name="description" content="Modern webhook receiver for testing and debugging webhooks with real-time updates" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* Hide scrollbars but keep functionality */
+    * {
+      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;  /* IE and Edge */
+    }
+    *::-webkit-scrollbar {
+      display: none;  /* Chrome, Safari and Opera */
+    }
+
+    /* Global styles */
+    :root {
+      /* Light Theme (default) - Modern Design System */
+      --sidebar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --sidebar-text: #ffffff;
+      --primary: #667eea;
+      --primary-dark: #5a67d8;
+      --primary-light: #f7fafc;
+      --accent: #48bb78;
+      --accent-dark: #38a169;
+      --card-bg: #ffffff;
+      --text-primary: #2d3748;
+      --text-secondary: #718096;
+      --text-muted: #a0aec0;
+      --bg-primary: #f7fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #edf2f7;
+      --border-color: #e2e8f0;
+      --border-light: #f7fafc;
+      --hover-bg: #f7fafc;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+      --border-radius: 12px;
+      --border-radius-lg: 16px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Dark Theme - Modern */
+    [data-theme="dark"] {
+      --sidebar-bg: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      --sidebar-text: #f7fafc;
+      --primary: #9f7aea;
+      --primary-dark: #805ad5;
+      --primary-light: #2d3748;
+      --accent: #68d391;
+      --accent-dark: #48bb78;
+      --card-bg: #2d3748;
+      --text-primary: #f7fafc;
+      --text-secondary: #e2e8f0;
+      --text-muted: #a0aec0;
+      --bg-primary: #1a202c;
+      --bg-secondary: #2d3748;
+      --bg-tertiary: #4a5568;
+      --border-color: #4a5568;
+      --border-light: #2d3748;
+      --hover-bg: #4a5568;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+      --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.3), 0 10px 10px rgba(0, 0, 0, 0.2);
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+    }
+    body {
+      box-sizing: border-box;
+      font-family: var(--font);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      transition: var(--transition);
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .layout {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      min-width: 0;
+    }
+    .sidebar {
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      width: 280px;
+      min-width: 240px;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      box-shadow: var(--shadow-lg);
+      height: 100%;
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sidebar-header {
+      padding: 2rem 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(10px);
+    }
+    .sidebar-main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 12px 15px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 10px;
+      /* Hide scrollbar for Chrome, Safari and Opera */
+      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;  /* IE and Edge */
+    }
+    .sidebar-main h3 {
+      font-weight: 600;
+      margin: 12px 0 8px 0;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-left: 6px;
+    }
+    #endpointList {
+      list-style: none;
+      margin: 0;
+      padding: 8px;
+      border-radius: var(--border-radius);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow-md);
+      max-height: 180px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      font-size: 0.85rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      scrollbar-width: none;  /* Firefox */
+      -ms-overflow-style: none;  /* IE and Edge */
+    }
+    #endpointList li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 8px 12px;
+      border: none;
+      color: var(--sidebar-text);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      font-size: 0.85em;
+      line-height: 1.3;
+      max-width: 100%;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      min-height: 32px;
+      border-radius: 6px;
+      margin-bottom: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+    #endpointList li.selected {
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      transform: translateX(4px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    #endpointList li:last-child { border-bottom: none;}
+    #endpointList li .list-label {
+      flex: 1 1 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 400;
+      color: #e0e0e0;
+      min-width: 0;
+      padding-right: 8px;
+      cursor: default;
+      font-size: 0.9em;
+      letter-spacing: 0.01em;
+      opacity: 0.95;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .new-webhook-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border-radius: 50%;
+      margin-right: 6px;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+    #endpointList li:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: translateX(2px);
+    }
+    .endpoint-actions {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .endpoint-actions button {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.8em;
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-fast);
+      opacity: 0;
+      padding: 0;
+      margin: 0;
+      border-radius: 3px;
+    }
+    #endpointList li:hover .endpoint-actions button {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .endpoint-actions button:hover { 
+      color: rgba(255, 255, 255, 0.8);
+      transform: scale(1.1);
+    }
+    .endpoint-menu {
+      position: absolute;
+      right: -8px;
+      top: 100%;
+      background: rgba(239, 68, 68, 0.95) !important;
+      border: 2px solid #fff !important;
+      border-radius: 6px;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      min-width: 100px;
+      display: none;
+      margin-top: 4px;
+      padding: 8px;
+    }
+    .endpoint-menu.show {
+      display: block !important;
+      opacity: 1;
+      visibility: visible;
+    }
+    .endpoint-menu-item {
+      padding: 8px 12px;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: var(--transition-fast);
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .endpoint-menu-item:last-child {
+      border-bottom: none;
+    }
+    .endpoint-menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ef4444;
+    }
+    .endpoint-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+    .endpoint-modal.show {
+      display: flex;
+    }
+    .endpoint-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 320px;
+      max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    .endpoint-modal-header {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .endpoint-modal-body {
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .endpoint-modal-name {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      background: #f3f4f6;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 12px 0;
+      word-break: break-all;
+      color: #374151;
+      font-weight: 600;
+    }
+    .endpoint-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .endpoint-modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .endpoint-modal-btn.cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .endpoint-modal-btn.cancel:hover {
+      background: #e5e7eb;
+    }
+    .endpoint-modal-btn.delete {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    .confirm-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(4px);
+    }
+    .confirm-modal.show {
+      display: flex;
+    }
+    .confirm-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 320px;
+      max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    .confirm-modal-header {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .confirm-modal-body {
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .confirm-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .confirm-modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .confirm-modal-btn.cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .confirm-modal-btn.cancel:hover {
+      background: #e5e7eb;
+    }
+    .confirm-modal-btn.confirm {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    .confirm-modal-btn.confirm:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    .success-toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 10001;
+      animation: slideInRight 0.3s ease-out;
+    }
+    .success-toast.show {
+      display: flex;
+    }
+    .prompt-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(4px);
+    }
+    .prompt-modal.show {
+      display: flex;
+    }
+    .prompt-modal-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      min-width: 480px;
+      max-width: 600px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: modalSlideIn 0.3s ease-out;
+    }
+    .prompt-modal-header {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .prompt-modal-body {
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .prompt-modal-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      transition: border-color 0.2s ease;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      box-sizing: border-box;
+      line-height: 1.3;
+    }
+    .prompt-modal-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .prompt-modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .prompt-modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    .prompt-modal-btn.cancel {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .prompt-modal-btn.cancel:hover {
+      background: #e5e7eb;
+    }
+    .prompt-modal-btn.ok {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .prompt-modal-btn.ok:hover {
+      background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    .endpoint-actions button:active {
+      transform: scale(0.95);
+    }
+    .sidebar button, .sidebar input[type=button] {
+      margin: 12px 0;
+      width: 100%;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 14px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow-md);
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .sidebar button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    .sidebar button:hover::before {
+      left: 100%;
+    }
+    .sidebar button:disabled {
+      background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+      color: rgba(255, 255, 255, 0.7);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .sidebar button:not(:disabled):hover { 
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+    #g_idsignin-container {
+      margin-bottom: 30px;
+    }
+    #userInfo {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 16px 20px;
+      border-radius: var(--border-radius);
+      margin-top: auto;
+      font-size: 0.95rem;
+      display: none;
+      flex-direction: column;
+      max-width: 100%;
+      min-width: 0;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-md);
+    }
+    #userEmail {
+      font-weight: 700;
+      line-height: 1.18;
+      margin-bottom: 8px;
+      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 95%;
+      min-width: 0;
+      cursor: pointer;
+    }
+    #logoutBtn {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      align-self: flex-start;
+      max-width: 120px;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+    }
+    #logoutBtn:hover { 
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      height: 100vh;
+      background: var(--bg-primary);
+      min-width: 0;
+      overflow: hidden;
+    }
+    .main-inner-content {
+      padding: 20px 40px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      flex: 1;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    .endpoint-url-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .endpoint-url-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+    #endpointUrl {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--border-radius);
+      padding: 12px 60px 12px 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: #000000 !important;
+      word-break: break-all;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition-fast);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+      line-height: 1.3;
+      min-height: 20px;
+      opacity: 1 !important;
+    }
+    #copyEndpointBtn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border: none;
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow-md);
+      letter-spacing: 0.01em;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      min-width: 80px;
+      white-space: nowrap;
+      overflow: hidden;
+      position: relative;
+      overflow: hidden;
+    }
+    #copyEndpointBtn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    #copyEndpointBtn:hover::before {
+      left: 100%;
+    }
+    #copyEndpointBtn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    #copyEndpointBtn:disabled {
+      background-color: #bbb;
+      cursor: default;
+    }
+    #copyEndpointBtn:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+    .toggle-details-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 8px 20px;
+      margin: 4px 0;
+      align-self: flex-start;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow-md);
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+    .toggle-details-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    .toggle-details-btn:hover::before {
+      left: 100%;
+    }
+    .toggle-details-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    .toggle-details-btn-in-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .toggle-details-btn-in-header:hover {
+      background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .toggle-details-btn-in-header:active {
+      transform: translateY(0) !important;
+      box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+    }
+    .toggle-details-btn-in-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.6s;
+    }
+    .toggle-details-btn-in-header:hover::before {
+      left: 100%;
+    }
+    .requests-table-container {
+      width: 100%;
+      min-width: 0;
+      overflow: auto;
+      max-height: 75vh;
+      background: var(--card-bg);
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      display: block;
+    }
+    table {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 1rem;
+    }
+    thead {
+      background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
+      color: var(--primary);
+      font-size: 1.1rem;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 9;
+      border-bottom: 2px solid var(--primary);
+    }
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 16px 12px;
+      vertical-align: top;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      background: var(--card-bg);
+      min-width: 0;
+      max-width: 100vw;
+      box-sizing: border-box;
+    }
+    /* Increased width from 82px to 120px */
+    th:first-child, td:first-child {
+      width: 120px;
+      text-align: center;
+    }
+    tbody tr:hover { 
+      background: var(--bg-tertiary);
+      transform: scale(1.01);
+      transition: var(--transition-fast);
+    }
+    /* Highlight unopened requests */
+    tbody tr.unopened {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      font-weight: 600;
+      border-left: 4px solid var(--accent);
+    }
+    .method-badge, .detail-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.7em;
+      font-weight: bold;
+      text-transform: uppercase;
+      color: white;
+      margin-left: 6px;
+      vertical-align: middle;
+      cursor: help;
+    }
+    .detail-icon {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      padding: 0;
+      font-size: 0.8em;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-fast);
+    }
+    .detail-icon:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-md);
+    }
+    .detail-icon.headers { 
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    .detail-icon.query { 
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    /* Copy button styles */
+    .copy-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-left: 12px;
+      padding: 6px 12px;
+      transition: var(--transition-fast);
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+    .copy-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: #10b981;
+      color: white;
+      transform: scale(1.05);
+    }
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: white;
+      margin-left: 8px;
+      vertical-align: middle;
+      cursor: help;
+      box-shadow: var(--shadow-sm);
+      letter-spacing: 0.05em;
+      transition: var(--transition-fast);
+    }
+    .method-badge:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-md);
+    }
+    .method-badge.GET { background: linear-gradient(135deg, #10b981 0%, #059669 100%);}
+    .method-badge.POST { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);}
+    .method-badge.PUT { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);}
+    .method-badge.DELETE { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);}
+    .method-badge.PATCH { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);}
+    .method-badge.OTHER { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);}
+    details {
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius);
+      margin-top: 8px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-fast);
+      overflow: hidden;
+    }
+    details:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    summary {
+      font-weight: 600;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 1rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+    summary:hover {
+      background: var(--bg-tertiary);
+    }
+    summary::-webkit-details-marker { display: none; }
+    details[open]{ 
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+    }
+    details[open] summary { 
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+    pre {
+      margin: 0;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+      font-size: 0.9rem;
+      background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      max-height: 320px;
+      overflow-y: auto;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      border-top: 2px solid var(--primary);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+      user-select: text;
+      line-height: 1.6;
+    }
+    .no-requests {
+      margin: 80px auto;
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 1.2rem;
+      opacity: 0.8;
+      letter-spacing: 0.02em;
+      font-weight: 500;
+    }
+    @media (max-width: 1024px) {
+      .main-inner-content {
+        padding: 24px 32px 16px 32px;
+      }
+      .sidebar {
+        width: 260px;
+        min-width: 220px;
+      }
+    }
+    @media (max-width: 900px) {
+      .main-inner-content {
+        padding: 20px 24px 12px 24px;
+        width: 100vw;
+      }
+      .sidebar { 
+        width: 220px; 
+        min-width: 180px;
+      }
+      .sidebar-header {
+        padding: 1.5rem 1.2rem;
+        font-size: 1.3rem;
+      }
+      .sidebar-header, .sidebar-footer {
+        padding: 0.8rem 1rem;
+      }
+      .requests-table-container { 
+        padding: 0;
+        border-radius: var(--border-radius);
+      }
+      #endpointUrl {
+        font-size: 1rem;
+        padding: 14px 16px;
+      }
+      #copyEndpointBtn {
+        padding: 14px 24px;
+        font-size: 0.9rem;
+      }
+    }
+    @media (max-width: 768px) {
+      .layout { 
+        flex-direction: column; 
+        height: auto;
+      }
+      .sidebar { 
+        width: 100vw; 
+        max-width: none; 
+        min-width: unset; 
+        box-shadow: none;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .sidebar-header {
+        padding: 1.2rem 1.5rem;
+        font-size: 1.4rem;
+      }
+      .sidebar-main {
+        padding: 16px 20px;
+      }
+      #endpointList {
+        max-height: 200px;
+      }
+      .main-inner-content { 
+        padding: 20px 24px;
+      }
+      .requests-table-container { 
+        padding: 0;
+        border-radius: var(--border-radius);
+        max-height: 60vh;
+      }
+      .endpoint-url-row {
+        flex-direction: column;
+        gap: 12px;
+      }
+      #copyEndpointBtn {
+        width: 100%;
+        padding: 14px 20px;
+      }
+    }
+    @media (max-width: 480px) {
+      .sidebar-header {
+        padding: 1rem 1.2rem;
+        font-size: 1.2rem;
+      }
+      .sidebar-main {
+        padding: 12px 16px;
+      }
+      .main-inner-content {
+        padding: 16px 20px;
+      }
+      th, td {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+      }
+      .method-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+      }
+      summary {
+        padding: 12px 16px;
+        font-size: 0.9rem;
+      }
+      pre {
+        padding: 16px 20px;
+        font-size: 0.8rem;
+        max-height: 240px;
+      }
+    }
+  </style>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+<!-- Connection lost banner -->
+<div id="connectionBanner" style="
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%;
+  background:#ff4747;
+  color:#fff;
+  font-weight:700;
+  padding:12px 0;
+  text-align:center;
+  z-index:999;
+">
+  Connection lost.
+  <button id="reloadBtn" style="
+    margin-left:15px;
+    background:#fff;
+    color:#ff4747;
+    border:none;
+    padding:6px 14px;
+    border-radius:5px;
+    font-weight:700;
+    cursor:pointer;
+  ">Reload</button>
+</div>
+<!-- Prompt Modal -->
+<div id="promptModal" class="prompt-modal">
+  <div class="prompt-modal-content">
+    <div class="prompt-modal-header" id="promptHeader">Enter Input</div>
+    <div class="prompt-modal-body" id="promptMessage">Please enter your input:</div>
+    <input type="text" id="promptInput" class="prompt-modal-input" placeholder="Optional endpoint name...">
+    <div class="prompt-modal-actions">
+      <button class="prompt-modal-btn cancel" id="promptCancel">Cancel</button>
+      <button class="prompt-modal-btn ok" id="promptOk">OK</button>
+    </div>
+  </div>
+</div>
+<!-- Confirm Modal -->
+<div id="confirmModal" class="confirm-modal">
+  <div class="confirm-modal-content">
+    <div class="confirm-modal-header" id="confirmHeader">Confirm Action</div>
+    <div class="confirm-modal-body" id="confirmMessage">Are you sure you want to proceed?</div>
+    <div class="confirm-modal-actions">
+      <button class="confirm-modal-btn cancel" id="confirmCancel">Cancel</button>
+      <button class="confirm-modal-btn confirm" id="confirmOk">Confirm</button>
+    </div>
+  </div>
+</div>
+<!-- Success Toast -->
+<div id="successToast" class="success-toast">
+  <span>✓</span>
+  <span id="successMessage">Action completed successfully!</span>
+</div>
+<!-- Endpoint Modal -->
+<div id="endpointModal" class="endpoint-modal">
+  <div class="endpoint-modal-content">
+    <div class="endpoint-modal-header">Endpoint Details</div>
+    <div class="endpoint-modal-body">
+      <div>Endpoint Name:</div>
+      <div id="modalEndpointName" class="endpoint-modal-name"></div>
+    </div>
+    <div class="endpoint-modal-actions">
+      <button class="endpoint-modal-btn cancel">Cancel</button>
+      <button class="endpoint-modal-btn delete">Delete Endpoint</button>
+    </div>
+  </div>
+</div>
+<div class="layout">
+  <aside class="sidebar" aria-label="Navigation sidebar">
+    <header class="sidebar-header">
+      <div>
+        <span>Payload Box</span>
+        <small style="font-size: 0.8rem; opacity: 0.8; display: block; margin-top: 4px;">Webhook Receiver</small>
+      </div>
+    </header>
+    <nav class="sidebar-main" aria-label="Main navigation">
+      <button id="newEndpointBtn" disabled aria-label="Create new webhook endpoint">
+        <span style="margin-right: 8px;">+</span> Create New Endpoint
+      </button>
+      <h3 style="color: rgba(255,255,255,0.9); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Your Endpoints</h3>
+      <ul id="endpointList" tabindex="0" role="listbox" aria-label="Your webhook endpoints"></ul>
+      <section id="g_idsignin-container" aria-label="Google Sign-in container">
+        <div id="g_idsignin" role="button" aria-label="Google Sign-in Button"></div>
+      </section>
+      <section id="userInfo" aria-live="polite" aria-atomic="true" aria-label="User information panel">
+        <div id="userEmail" tabindex="0" title=""></div>
+        <button id="logoutBtn" aria-label="Logout from your account">Logout</button>
+      </section>
+    </nav>
+    <footer class="sidebar-footer">
+      <style>
+        .sidebar-footer {
+          padding: 12px 20px;
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.6);
+          text-align: center;
+          background: rgba(255, 255, 255, 0.05);
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+        }
+      </style>
+      <small>&copy; 2025 Webhook Receiver App</small>
+    </footer>
+  </aside>
+  <main class="main-area" aria-label="Main content">
+    <div class="main-inner-content">
+      <section class="endpoint-url-row" aria-label="Endpoint URL section">
+        <div class="endpoint-url-container">
+          <div id="endpointUrl" tabindex="0" title="Your webhook endpoint URL will appear here" aria-label="Webhook endpoint URL"></div>
+          <button id="copyEndpointBtn" disabled aria-label="Copy endpoint URL to clipboard">
+            <span style="margin-right: 8px;">📋</span> Copy
+          </button>
+        </div>
+      </section>
+      <section class="requests-table-container" id="requestsTableContainer" role="region" aria-live="polite" aria-atomic="true" aria-relevant="additions" aria-label="Webhook requests">
+        <div id="requests">
+          <div class="no-requests" role="status" tabindex="0">
+            <span style="display: block; font-size: 2rem; margin-bottom: 16px;">📡</span>
+            No requests have been received yet.
+            <br><small style="opacity: 0.7; font-size: 0.9rem;">Send a webhook to your endpoint URL to see it appear here</small>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  (function() {
+    const newEndpointBtn = document.getElementById('newEndpointBtn');
+    const endpointUrl = document.getElementById('endpointUrl');
+    const copyEndpointBtn = document.getElementById('copyEndpointBtn');
+    const requestsDiv = document.getElementById('requests');
+    const endpointList = document.getElementById('endpointList');
+    const g_idsignin = document.getElementById('g_idsignin');
+    const userInfo = document.getElementById('userInfo');
+    const userEmail = document.getElementById('userEmail');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const g_idsignin_container = document.getElementById('g_idsignin-container');
+    const toggleAllBtn = document.getElementById('toggleAllDetailsBtn');
+    const connectionBanner = document.getElementById('connectionBanner');
+    const reloadBtn = document.getElementById('reloadBtn');
+
+    const STORAGE_KEY = 'webhookAuthToken';
+    const STORAGE_TIME_KEY = 'webhookAuthTokenTime';
+
+    let socket = null;
+    let socketConnected = true;
+    let currentEndpoint = null;
+    let allRequests = [];
+    let endpoints = [];
+    let authToken = null;
+    let currentUser = null;
+    let allOpen = false;
+    const VIEWED_WEBHOOKS_KEY = 'viewedWebhooks';
+    let viewedWebhooks = new Set(JSON.parse(localStorage.getItem(VIEWED_WEBHOOKS_KEY) || '[]'));
+
+    // Set to keep track of viewed requests by index
+    let viewedRequests = new Set();
+
+    // Save token and login time
+    function saveLogin(token) {
+      localStorage.setItem(STORAGE_KEY, token);
+      localStorage.setItem(STORAGE_TIME_KEY, Date.now());
+    }
+
+    // Clear token and time
+    function clearLogin() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME_KEY);
+    }
+
+    // Load token if still valid (within 30 days)
+    function loadLogin() {
+      const token = localStorage.getItem(STORAGE_KEY);
+      const time = localStorage.getItem(STORAGE_TIME_KEY);
+      if (!token || !time) return null;
+      const elapsed = Date.now() - Number(time);
+      if (elapsed > 30 * 24 * 60 * 60 * 1000) {  // 30 days in milliseconds
+        clearLogin();
+        return null;
+      }
+      return token;
+    }
+
+    function formatTimestamp(iso) {
+      const dt = new Date(iso);
+      if (Number.isNaN(dt.getTime())) return iso;
+      return dt.toLocaleString();
+    }
+
+    function createMethodBadge(method) {
+      const m = (method || 'OTHER').toUpperCase();
+      const known = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+      const key = known.includes(m) ? m : 'OTHER';
+      const span = document.createElement('span');
+      span.className = 'method-badge ' + key;
+      span.title = `HTTP Method: ${key}`;
+      span.textContent = key;
+      return span;
+    }
+
+    function createIcon(iconClass, title) {
+      const icon = document.createElement('span');
+      icon.className = `detail-icon ${iconClass}`;
+      icon.title = title;
+      icon.textContent = iconClass === 'headers' ? 'H' : 'Q';
+      return icon;
+    }
+
+    function renderRequestRow(req, idx) {
+      const tr = document.createElement('tr');
+      // Mark endpoint as viewed when requests are loaded
+      if (currentEndpoint) {
+        viewedWebhooks.add(currentEndpoint);
+        localStorage.setItem(VIEWED_WEBHOOKS_KEY, JSON.stringify(Array.from(viewedWebhooks)));
+        updateEndpointIndicators();
+      }
+      
+      const tdNum = document.createElement('td');
+      tdNum.innerHTML = `<strong>#${idx + 1}</strong><br><small>${formatTimestamp(req.timestamp)}</small>`;
+      tr.appendChild(tdNum);
+      const tdDetails = document.createElement('td');
+      function createDetail(name, obj, isOpen = false) {
+        const dtl = document.createElement('details');
+        dtl.open = isOpen || allOpen;
+        dtl.addEventListener('toggle', () => {
+          if (dtl.open && !viewedRequests.has(idx)) {
+            viewedRequests.add(idx);
+            tr.classList.remove('unopened');
+          }
+        });
+        const sum = document.createElement('summary');
+        
+        // Add icon instead of text for Headers and Query
+        if (name === 'Headers') {
+          const icon = createIcon('headers', 'Headers');
+          sum.appendChild(icon);
+          sum.appendChild(document.createTextNode(` ${Object.keys(obj || {}).length}`));
+          sum.appendChild(createMethodBadge(req.method));
+        } else if (name === 'Query') {
+          const icon = createIcon('query', 'Query Parameters');
+          sum.appendChild(icon);
+          sum.appendChild(document.createTextNode(` ${Object.keys(obj || {}).length}`));
+        } else {
+          sum.textContent = `${name} (${Object.keys(obj || {}).length})`;
+          
+          // Add copy button for Body section
+          if (name === 'Body') {
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.textContent = 'Copy';
+            copyBtn.title = 'Copy to clipboard';
+            copyBtn.onclick = (e) => {
+              e.stopPropagation();
+              const textToCopy = JSON.stringify(obj || {}, null, 2);
+              navigator.clipboard.writeText(textToCopy).then(() => {
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                  copyBtn.textContent = 'Copy';
+                  copyBtn.classList.remove('copied');
+                }, 2000);
+              }).catch(err => {
+                console.error('Failed to copy:', err);
+                copyBtn.textContent = 'Failed';
+                setTimeout(() => {
+                  copyBtn.textContent = 'Copy';
+                }, 2000);
+              });
+            };
+            sum.appendChild(copyBtn);
+          }
+        }
+        
+        dtl.appendChild(sum);
+        const pre = document.createElement('pre');
+        try { pre.textContent = JSON.stringify(obj || {}, null, 2); }
+        catch { pre.textContent = 'Invalid JSON'; }
+        dtl.appendChild(pre);
+        return dtl;
+      }
+      // Add query parameters with icon
+      if (Object.keys(req.query || {}).length > 0) {
+        tdDetails.appendChild(createDetail('Query', req.query));
+      }
+      
+      // Add headers with icon
+      if (Object.keys(req.headers || {}).length > 0) {
+        tdDetails.appendChild(createDetail('Headers', req.headers));
+      }
+      
+      // Add body, open by default
+      const bodyContent = typeof req.body === 'object' ? req.body : { value: req.body || '(empty)' };
+      tdDetails.appendChild(createDetail('Body', bodyContent, true));
+      tr.appendChild(tdDetails);
+      return tr;
+    }
+
+    function renderTable(requests) {
+      requestsDiv.textContent = '';
+      if (!requests.length) {
+        requestsDiv.innerHTML = `<div class="no-requests" role="alert" tabindex="0">No requests have been received yet.</div>`;
+        return;
+      }
+      const tbl = document.createElement('table');
+      const thead = document.createElement('thead');
+      thead.innerHTML = `<tr><th># & Timestamp</th><th style="position: relative;">Request Data <button class="toggle-details-btn-in-header" id="toggleAllDetailsBtn" aria-pressed="false" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); margin: 0; padding: 8px 16px; font-size: 0.85rem; font-weight: 700;"><span style="margin-right: 6px;">📋</span>Show All</button></th></tr>`;
+      tbl.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      requests.forEach((r, i) => {
+        tbody.appendChild(renderRequestRow(r, i));
+      });
+      tbl.appendChild(tbody);
+      requestsDiv.appendChild(tbl);
+      
+      // Re-attach event listener to the new button
+      const newToggleBtn = document.getElementById('toggleAllDetailsBtn');
+      newToggleBtn.addEventListener('click', () => {
+        allOpen = !allOpen;
+        newToggleBtn.innerHTML = allOpen ? '<span style="margin-right: 6px;">🔒</span>Hide All' : '<span style="margin-right: 6px;">📋</span>Show All';
+        newToggleBtn.setAttribute('aria-pressed', allOpen.toString());
+        requestsDiv.querySelectorAll('details').forEach(d => {
+          if (d.open !== allOpen) d.open = allOpen;
+        });
+        if (allOpen) {
+          for (let i = 0; i < allRequests.length; i++) {
+            viewedRequests.add(i);
+          }
+          const trs = requestsDiv.querySelectorAll('tbody tr.unopened');
+          trs.forEach(tr => tr.classList.remove('unopened'));
+        }
+      });
+    }
+
+    // Remove old toggle button event listener since button is now dynamically created
+
+    // Custom prompt function
+    let promptResolve = null;
+    
+    function showPrompt(header, message, defaultValue = '') {
+      return new Promise((resolve) => {
+        promptResolve = resolve;
+        document.getElementById('promptHeader').textContent = header;
+        document.getElementById('promptMessage').textContent = message;
+        document.getElementById('promptInput').value = defaultValue;
+        document.getElementById('promptModal').classList.add('show');
+        
+        // Focus on input
+        setTimeout(() => {
+          document.getElementById('promptInput').focus();
+        }, 100);
+      });
+    }
+    
+    function closePromptModal() {
+      document.getElementById('promptModal').classList.remove('show');
+      if (promptResolve) {
+        promptResolve(null);
+        promptResolve = null;
+      }
+    }
+    
+    function acceptPrompt() {
+      const value = document.getElementById('promptInput').value;
+      document.getElementById('promptModal').classList.remove('show');
+      if (promptResolve) {
+        promptResolve(value);
+        promptResolve = null;
+      }
+    }
+    
+    // Custom alert function
+    function showAlert(header, message) {
+      return showConfirm(header, message);
+    }
+    
+    // Custom confirm and success functions
+    let confirmResolve = null;
+    
+    function showConfirm(header, message) {
+      return new Promise((resolve) => {
+        confirmResolve = resolve;
+        document.getElementById('confirmHeader').textContent = header;
+        document.getElementById('confirmMessage').textContent = message;
+        document.getElementById('confirmModal').classList.add('show');
+      });
+    }
+    
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+      if (confirmResolve) {
+        confirmResolve(false);
+        confirmResolve = null;
+      }
+    }
+    
+    function confirmAction() {
+      document.getElementById('confirmModal').classList.remove('show');
+      if (confirmResolve) {
+        confirmResolve(true);
+        confirmResolve = null;
+      }
+    }
+    
+    function showSuccess(message) {
+      document.getElementById('successMessage').textContent = message;
+      document.getElementById('successToast').classList.add('show');
+      setTimeout(() => {
+        document.getElementById('successToast').classList.remove('show');
+      }, 3000);
+    }
+    
+    // Modal functions
+    let currentEndpointToDelete = null;
+    
+    function showEndpointModal(endpointId, endpointName) {
+      currentEndpointToDelete = endpointId;
+      document.getElementById('modalEndpointName').textContent = endpointName;
+      document.getElementById('endpointModal').classList.add('show');
+    }
+    
+    function closeEndpointModal() {
+      document.getElementById('endpointModal').classList.remove('show');
+      // Don't clear currentEndpointToDelete here, only clear after delete is complete
+    }
+    
+    async function deleteFromModal() {
+      if (!currentEndpointToDelete) return;
+      
+      // Store the endpoint ID to delete
+      const endpointToDelete = currentEndpointToDelete;
+      
+      // Close the endpoint details modal first
+      closeEndpointModal();
+      
+      // Wait a bit for the modal to close, then show confirm
+      setTimeout(async () => {
+        const confirmed = await showConfirm(
+          'Delete Endpoint',
+          'Are you sure you want to delete this endpoint and all its requests? This action cannot be undone.'
+        );
+        
+        if (!confirmed) {
+          // Clear the endpoint ID if user cancelled
+          currentEndpointToDelete = null;
+          return;
+        }
+        
+        try {
+          const res = await fetch(`/endpoints/${endpointToDelete}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (!res.ok) throw new Error('Delete failed');
+          
+          await loadEndpoints();
+          if (currentEndpoint === endpointToDelete) {
+            currentEndpoint = null;
+            endpointUrl.textContent = '';
+            copyEndpointBtn.disabled = true;
+            allRequests = [];
+            viewedRequests.clear();
+            renderTable(allRequests);
+          }
+          showSuccess('Endpoint deleted successfully!');
+        } catch (err) {
+          await showAlert('Error', 'Error: ' + err.message);
+        } finally {
+          // Clear the endpoint ID after delete is complete
+          currentEndpointToDelete = null;
+        }
+      }, 200);
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('endpointModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        closeEndpointModal();
+        currentEndpointToDelete = null;
+      }
+    });
+    
+    // Add event listeners to modal buttons
+    document.addEventListener('DOMContentLoaded', () => {
+      const cancelBtn = document.querySelector('.endpoint-modal-btn.cancel');
+      const deleteBtn = document.querySelector('.endpoint-modal-btn.delete');
+      const confirmCancelBtn = document.getElementById('confirmCancel');
+      const confirmOkBtn = document.getElementById('confirmOk');
+      const promptCancelBtn = document.getElementById('promptCancel');
+      const promptOkBtn = document.getElementById('promptOk');
+      
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeEndpointModal);
+      }
+      
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', deleteFromModal);
+      }
+      
+      if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', closeConfirmModal);
+      }
+      
+      if (confirmOkBtn) {
+        confirmOkBtn.addEventListener('click', confirmAction);
+      }
+      
+      if (promptCancelBtn) {
+        promptCancelBtn.addEventListener('click', closePromptModal);
+      }
+      
+      if (promptOkBtn) {
+        promptOkBtn.addEventListener('click', acceptPrompt);
+      }
+      
+      // Close modals when clicking outside
+      document.getElementById('confirmModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+          closeConfirmModal();
+        }
+      });
+      
+      document.getElementById('promptModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+          closePromptModal();
+        }
+      });
+      
+      // Handle Enter key in prompt input
+      document.getElementById('promptInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          acceptPrompt();
+        } else if (e.key === 'Escape') {
+          closePromptModal();
+        }
+      });
+    });
+
+    // Close menus when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.endpoint-actions')) {
+        document.querySelectorAll('.endpoint-menu').forEach(menu => {
+          menu.classList.remove('show');
+        });
+      }
+    });
+
+    function updateEndpointIndicators() {
+      const items = endpointList.querySelectorAll('li');
+      items.forEach(li => {
+        const endpointId = li.getAttribute('data-endpoint-id');
+        if (endpointId) {
+          const dot = li.querySelector('.new-webhook-dot');
+          if (viewedWebhooks.has(endpointId)) {
+            if (dot) dot.remove();
+          } else if (!dot) {
+            const newDot = document.createElement('span');
+            newDot.className = 'new-webhook-dot';
+            newDot.title = 'New webhook';
+            const label = li.querySelector('.list-label');
+            if (label) label.prepend(newDot);
+          }
+        }
+      });
+    }
+
+    async function loadEndpoints() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/endpoints', { headers: { 'Authorization': `Bearer ${authToken}` } });
+        if (!res.ok) throw new Error('Failed to load endpoints');
+        endpoints = await res.json();
+        endpointList.textContent = '';
+        if (!endpoints.length) {
+          const li = document.createElement('li');
+          li.textContent = 'No endpoints created yet.';
+          li.style.fontStyle = 'italic';
+          li.tabIndex = -1;
+          endpointList.appendChild(li);
+          return;
+        }
+        endpoints.forEach(ep => {
+          const li = document.createElement('li');
+          li.tabIndex = 0;
+          li.setAttribute('role', 'option');
+          li.setAttribute('data-endpoint-id', ep.id);
+          li.className = (ep.id === currentEndpoint) ? 'selected' : '';
+          li.setAttribute('aria-selected', ep.id === currentEndpoint ? 'true' : 'false');
+          const spanName = document.createElement('span');
+          spanName.className = 'list-label';
+          spanName.textContent = ep.name || ep.id;
+          
+          // Add new webhook dot if not viewed
+          if (!viewedWebhooks.has(ep.id)) {
+            const newDot = document.createElement('span');
+            newDot.className = 'new-webhook-dot';
+            newDot.title = 'New webhook';
+            spanName.prepend(newDot);
+          }
+          
+          // Create three dots menu
+          const actions = document.createElement('div');
+          actions.className = 'endpoint-actions';
+          const menuBtn = document.createElement('button');
+          menuBtn.textContent = '⋮';
+          menuBtn.title = 'More options';
+          menuBtn.onclick = e => {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            // Show modal with endpoint details
+            showEndpointModal(ep.id, ep.name || ep.id);
+          };
+          actions.appendChild(menuBtn);
+          li.appendChild(spanName);
+          li.appendChild(actions);
+          li.onclick = () => selectEndpoint(ep.id);
+          li.onkeydown = e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectEndpoint(ep.id);
+            }
+          };
+          endpointList.appendChild(li);
+        });
+      } catch (err) {
+        endpointList.innerHTML = `<li><em>Error loading endpoints.</em></li>`;
+      }
+    }
+
+    function selectEndpoint(id) {
+      currentEndpoint = id;
+      const url = `${location.protocol}//${location.host}/${id}`;
+      const endpointUrlElement = document.getElementById('endpointUrl');
+      if (endpointUrlElement) {
+        endpointUrlElement.textContent = url;
+        endpointUrlElement.value = url; // Also set as value for input elements
+      }
+      copyEndpointBtn.disabled = false;
+      allRequests = [];
+      viewedRequests.clear();
+      renderTable(allRequests);
+      if (socketConnected && socket) socket.emit('join', id);
+      [...endpointList.children].forEach(li => {
+        li.classList.toggle('selected', li.querySelector('.list-label')?.textContent === (endpoints.find(ep => ep.id === id)?.name || id));
+        li.setAttribute('aria-selected', li.classList.contains('selected') ? 'true' : 'false');
+      });
+      
+      // Mark as viewed when selected
+      if (id && !viewedWebhooks.has(id)) {
+        viewedWebhooks.add(id);
+        localStorage.setItem(VIEWED_WEBHOOKS_KEY, JSON.stringify(Array.from(viewedWebhooks)));
+        updateEndpointIndicators();
+      }
+    }
+
+    copyEndpointBtn.onclick = () => {
+      const txt = endpointUrl.textContent.trim();
+      if (!txt) {
+        showAlert('No URL', 'No URL available to copy.');
+        return;
+      }
+      navigator.clipboard.writeText(txt).then(() => {
+        copyEndpointBtn.textContent = 'Copied!';
+        copyEndpointBtn.disabled = true;
+        setTimeout(() => {
+          copyEndpointBtn.textContent = 'Copy';
+          copyEndpointBtn.disabled = false;
+        }, 2000);
+      }).catch(() => showAlert('Copy Failed', 'Failed to copy URL to clipboard.'));
+    };
+
+    function connectSocket() {
+      socket = io({ reconnection: true, reconnectionAttempts: 10, reconnectionDelay: 1000 });
+
+      socket.on('disconnect', () => {
+        socketConnected = false;
+        connectionBanner.style.display = 'block';
+      });
+
+      reloadBtn.onclick = () => window.location.reload();
+
+      socket.on('connect', () => {
+        socketConnected = true;
+        connectionBanner.style.display = 'none';
+        if (currentEndpoint) socket.emit('join', currentEndpoint);
+      });
+
+      socket.on('connect_error', err => {
+        console.error('Socket.IO connect error:', err);
+        connectionBanner.style.display = 'block';
+      });
+
+      socket.on('init_requests', data => {
+        allRequests = [...data];
+        viewedRequests.clear();
+        renderTable(allRequests);
+        allOpen = false;
+        toggleAllBtn.textContent = 'Show All Details';
+        toggleAllBtn.setAttribute('aria-pressed', 'false');
+      });
+
+      socket.on('new_request', req => {
+        allRequests.unshift(req);
+        renderTable(allRequests);
+        allOpen = false;
+        toggleAllBtn.textContent = 'Show All Details';
+        toggleAllBtn.setAttribute('aria-pressed', 'false');
+      });
+
+      socket.on('error', msg => alert(msg));
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === 'visible' && !socketConnected) {
+        window.location.reload();
+      }
+    });
+
+    newEndpointBtn.onclick = async () => {
+      if (!authToken) {
+        await showAlert('Sign In Required', 'Please sign in to create a new endpoint.');
+        return;
+      }
+      const name = await showPrompt(
+        'Create New Endpoint', 
+        'Enter a name for your new webhook endpoint (optional):',
+        ''
+      );
+      if (name === null) return; // User cancelled
+      
+      // Allow empty names - they're optional
+      try {
+        const res = await fetch('/new', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: name && name.trim() ? name.trim() : undefined })
+        });
+        if (!res.ok) throw new Error('Create failed');
+        const data = await res.json();
+        await loadEndpoints();
+        selectEndpoint(data.id);
+        showSuccess('Endpoint created successfully!');
+      } catch (err) {
+        await showAlert('Error', 'Error: ' + err.message);
+      }
+    };
+
+    // Save token and timestamp on successful login
+    function saveLogin(token) {
+      localStorage.setItem(STORAGE_KEY, token);
+      localStorage.setItem(STORAGE_TIME_KEY, Date.now());
+    }
+
+    // Clear stored token on logout
+    function clearLogin() {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_TIME_KEY);
+    }
+
+    // Load token if not expired (>30 days = expired)
+    function loadLogin() {
+      const token = localStorage.getItem(STORAGE_KEY);
+      const time = localStorage.getItem(STORAGE_TIME_KEY);
+      if (!token || !time) return null;
+      if ((Date.now() - Number(time)) > 30 * 24 * 60 * 60 * 1000) {  // 30 days in milliseconds
+        clearLogin();
+        return null;
+      }
+      return token;
+    }
+
+    // Modified to save token persistently
+    function handleCredentialResponse(response) {
+      if (!response.credential) {
+        showAlert('Missing Credentials', 'Missing credentials from authentication.');
+        return;
+      }
+      fetch('/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: response.credential }),
+      }).then(r => {
+        if (!r.ok) throw new Error('Authentication failed');
+        return r.json();
+      }).then(data => {
+        authToken = response.credential;
+        saveLogin(authToken); // Persist login token
+        currentUser = data.user;
+        updateUIOnSignIn();
+        return loadEndpoints();
+      }).catch(async err => {
+        await showAlert('Authentication Error', 'Authentication error: ' + err.message);
+        googleLogout();
+      });
+    }
+
+    function updateUIOnSignIn() {
+      g_idsignin_container.style.display = 'none';
+      userInfo.style.display = 'flex';
+      userEmail.textContent = currentUser.email;
+      userEmail.title = currentUser.email;
+      newEndpointBtn.disabled = false;
+    }
+
+    function updateUIOnSignOut() {
+      g_idsignin_container.style.display = 'block';
+      userInfo.style.display = 'none';
+      userEmail.textContent = '';
+      userEmail.title = '';
+      newEndpointBtn.disabled = true;
+      currentEndpoint = null;
+      endpointUrl.textContent = '';
+      copyEndpointBtn.disabled = true;
+      allRequests = [];
+      viewedRequests.clear();
+      renderTable(allRequests);
+      allOpen = false;
+      toggleAllBtn.textContent = 'Show All Details';
+      toggleAllBtn.setAttribute('aria-pressed', 'false');
+      endpointList.textContent = '';
+      
+      // Clear the requests table completely
+      const requestsDiv = document.getElementById('requests');
+      if (requestsDiv) {
+        requestsDiv.innerHTML = `
+          <div class="requests-table-container">
+            <table id="requestsTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Method</th>
+                  <th>Request Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="3" style="text-align: center; padding: 40px; color: #999;">
+                    Please sign in to view webhook requests
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+      
+      // Clear any remaining endpoint URL
+      const endpointUrlElement = document.getElementById('endpointUrl');
+      if (endpointUrlElement) {
+        endpointUrlElement.textContent = '';
+      }
+      
+      // Remove toggle details button if it exists
+      const toggleBtn = document.querySelector('.toggle-details-btn-in-header');
+      if (toggleBtn) {
+        toggleBtn.remove();
+      }
+    }
+
+    logoutBtn.onclick = () => googleLogout();
+
+    // Clear saved token on logout
+    function googleLogout() {
+      authToken = null;
+      currentUser = null;
+      clearLogin();
+      updateUIOnSignOut();
+      google.accounts.id.disableAutoSelect();
+    }
+
+    // Load stored token on page load and validate it
+    function checkStoredSession() {
+      const savedToken = loadLogin();
+      if (savedToken) {
+        authToken = savedToken;
+        fetch('/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: authToken }),
+        }).then(r => {
+          if (!r.ok) throw new Error('Authentication failed');
+          return r.json();
+        }).then(data => {
+          currentUser = data.user;
+          updateUIOnSignIn();
+          loadEndpoints();
+        }).catch(() => {
+          googleLogout();
+        });
+      } else {
+        updateUIOnSignOut();
+      }
+    }
+
+    window.onload = () => {
+      google.accounts.id.initialize({
+        client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
+        callback: handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+      });
+      google.accounts.id.renderButton(g_idsignin, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        locale: 'en',
+      });
+      google.accounts.id.prompt();
+      connectSocket();
+      checkStoredSession();
+    };
+  })();
+</script>
+  <script>
+  // Set light theme by default
+  document.documentElement.setAttribute('data-theme', 'light');
+  </script>
+</body>
+</html>
