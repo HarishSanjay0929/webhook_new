@@ -150,14 +150,23 @@ app.all('/:id', async (req, res) => {
       query: req.query,
       timestamp: new Date()
     };
-    await requestsCollection.insertOne(data);
+    const result = await requestsCollection.insertOne(data);
+    const requestId = result.insertedId;
     io.to(id).emit('new_request', {
+      _id: requestId.toString(),
       method: data.method,
       headers: data.headers,
       body: data.body,
       query: data.query,
       timestamp: data.timestamp.toISOString()
     });
+
+    // Redirect browser GET requests to the web app
+    const userAgent = req.headers['user-agent'] || '';
+    if (req.method === 'GET' && userAgent.includes('Mozilla')) {
+      return res.redirect(`/?highlight=${requestId}`);
+    }
+
     res.status(200).send('Received');
   } catch (err) {
     console.error('Error handling webhook request:', err);
@@ -184,6 +193,7 @@ io.on('connection', (socket) => {
         .limit(100)
         .toArray();
       const formattedRequests = recentRequests.map(r => ({
+        _id: r._id.toString(),
         method: r.method,
         headers: r.headers,
         body: r.body,
