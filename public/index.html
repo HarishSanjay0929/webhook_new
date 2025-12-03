@@ -1314,9 +1314,14 @@
     let allOpen = false;
     const VIEWED_WEBHOOKS_KEY = 'viewedWebhooks';
     let viewedWebhooks = new Set(JSON.parse(localStorage.getItem(VIEWED_WEBHOOKS_KEY) || '[]'));
+    let highlightRequestId = null;
 
     // Set to keep track of viewed requests by index
     let viewedRequests = new Set();
+
+    // Parse URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    highlightRequestId = urlParams.get('highlight');
 
     // Save token and login time
     function saveLogin(token) {
@@ -1473,7 +1478,7 @@
       });
       tbl.appendChild(tbody);
       requestsDiv.appendChild(tbl);
-      
+
       // Re-attach event listener to the new button
       const newToggleBtn = document.getElementById('toggleAllDetailsBtn');
       newToggleBtn.addEventListener('click', () => {
@@ -1491,6 +1496,31 @@
           trs.forEach(tr => tr.classList.remove('unopened'));
         }
       });
+
+      // Handle highlight parameter
+      if (highlightRequestId && currentUser) {
+        const requestIndex = requests.findIndex(r => r._id === highlightRequestId);
+        if (requestIndex !== -1) {
+          const endpoint = endpoints.find(ep => ep.id === requests[requestIndex].endpointId);
+          if (endpoint && endpoint.createdBy === currentUser.email) {
+            // Scroll to and highlight the request
+            const trs = tbody.querySelectorAll('tr');
+            const targetTr = trs[requestIndex];
+            if (targetTr) {
+              targetTr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              targetTr.style.backgroundColor = '#fef3c7';
+              setTimeout(() => {
+                targetTr.style.backgroundColor = '';
+              }, 3000);
+              // Clear the highlight param from URL
+              const url = new URL(window.location);
+              url.searchParams.delete('highlight');
+              window.history.replaceState({}, '', url);
+              highlightRequestId = null;
+            }
+          }
+        }
+      }
     }
 
     // Remove old toggle button event listener since button is now dynamically created
