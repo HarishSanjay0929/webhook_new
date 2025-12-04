@@ -7,6 +7,7 @@ const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
 const { OAuth2Client } = require('google-auth-library');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const server = http.createServer(app);
@@ -161,6 +162,23 @@ app.all('/:id', async (req, res) => {
       timestamp: data.timestamp.toISOString()
     });
 
+    // Send email notification if enabled
+    if (endpointExists.createdBy) {
+      sendWebhookNotification(
+        endpointExists.createdBy, // notification email (fallback)
+        endpointExists._id, // endpoint ID
+        {
+          method: data.method,
+          headers: data.headers,
+          query: data.query,
+          body: data.body,
+          timestamp: data.timestamp
+        },
+        req,  // Pass the request object to access host information
+        null   // No Google user ID available at webhook time
+      );
+    }
+
     // Redirect browser GET requests to the web app
     const userAgent = req.headers['user-agent'] || '';
     if (req.method === 'GET' && userAgent.includes('Mozilla')) {
@@ -214,6 +232,256 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => clearInterval(heartbeatInterval));
   */
 });
+
+// Email notification endpoints
+app.post('/api/notifications/enable', authenticateGoogleToken, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const notificationEmail = email || req.user.email;
+    
+    // Update Google user ID settings
+    await db.collection('userSettings').updateOne(
+      { userId: req.user.sub },
+      { $set: { emailNotifications: true, notificationEmail: notificationEmail } },
+      { upsert: true }
+    );
+
+    // Also update work email settings if user has work email endpoints
+    if (req.user.email && req.user.email !== req.user.sub) {
+      await db.collection('userSettings').updateOne(
+        { userId: req.user.email },
+        { $set: { emailNotifications: true, notificationEmail: notificationEmail } },
+        { upsert: true }
+      );
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error enabling notifications:', error);
+    res.status(500).json({ error: 'Failed to enable notifications' });
+  }
+});
+
+app.post('/api/notifications/disable', authenticateGoogleToken, async (req, res) => {
+  try {
+    // Update Google user ID settings
+    await db.collection('userSettings').updateOne(
+      { userId: req.user.sub },
+      { $set: { emailNotifications: false } },
+      { upsert: true }
+    );
+
+    // Also update work email settings if user has work email endpoints
+    if (req.user.email && req.user.email !== req.user.sub) {
+      await db.collection('userSettings').updateOne(
+        { userId: req.user.email },
+        { $set: { emailNotifications: false } },
+        { upsert: true }
+      );
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error disabling notifications:', error);
+    res.status(500).json({ error: 'Failed to disable notifications' });
+  }
+});
+
+app.get('/api/notifications/status', authenticateGoogleToken, async (req, res) => {
+  try {
+    const settings = await db.collection('userSettings').findOne({ userId: req.user.sub });
+    res.json({
+      enabled: settings?.emailNotifications || false,
+      email: settings?.notificationEmail || req.user.email
+    });
+  } catch (error) {
+    console.error('Error getting notification status:', error);
+    res.status(500).json({ error: 'Failed to get notification status' });
+  }
+});
+
+app.post('/api/notifications/email', authenticateGoogleToken, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    // Clean up old entries with different emails for both user IDs
+    await db.collection('userSettings').deleteMany({
+      userId: { $in: [req.user.sub, req.user.email].filter(Boolean) },
+      notificationEmail: { $ne: email }
+    });
+
+    // Update Google user ID settings
+    await db.collection('userSettings').updateOne(
+      { userId: req.user.sub },
+      { $set: { notificationEmail: email } },
+      { upsert: true }
+    );
+
+    // Also update work email settings if user has work email endpoints
+    if (req.user.email && req.user.email !== req.user.sub) {
+      await db.collection('userSettings').updateOne(
+        { userId: req.user.email },
+        { $set: { notificationEmail: email } },
+        { upsert: true }
+      );
+    }
+
+    res.json({ success: true, email });
+  } catch (error) {
+    console.error('Error saving notification email:', error);
+    res.status(500).json({ error: 'Failed to save notification email' });
+  }
+});
+
+app.get('/api/verify-token', authenticateGoogleToken, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// Email notification function
+async function sendWebhookNotification(creatorEmail, endpointId, requestData, req, googleUserId) {
+  try {
+    // Find user settings - try multiple approaches since we don't have Google user ID at webhook time
+    let userSettings = null;
+    
+    if (googleUserId) {
+      // If we have Google user ID, use that
+      userSettings = await db.collection('userSettings').findOne({ userId: googleUserId });
+    }
+    
+    if (!userSettings) {
+      // Fallback 1: Look for user settings by notificationEmail
+      userSettings = await db.collection('userSettings').findOne({ notificationEmail: creatorEmail });
+    }
+    
+    if (!userSettings) {
+      // Fallback 2: Look for user settings by creator email (for backwards compatibility)
+      userSettings = await db.collection('userSettings').findOne({ userId: creatorEmail });
+    }
+    
+    if (!userSettings?.emailNotifications) {
+      console.log('Email notifications not enabled for', creatorEmail);
+      console.log('User settings found:', !!userSettings, 'Notifications enabled:', userSettings?.emailNotifications);
+      return;
+    }
+
+    const notificationEmail = userSettings.notificationEmail || creatorEmail;
+
+    // Fetch endpoint details for the email
+    const endpoint = await endpointsCollection.findOne({ _id: endpointId });
+    const endpointName = endpoint?.name || endpointId;
+    const hostUrl = req ? `${req.protocol}://${req.get('host')}` : (process.env.BASE_URL || 'http://localhost:3000');
+    const endpointUrl = `${hostUrl}/${endpointId}`;
+
+    // If transporter is not configured, just log and return
+    if (!transporter) {
+      console.log('Email notification would be sent to:', notificationEmail);
+      console.log('Endpoint:', endpointId, 'Name:', endpointName);
+      console.log('Request data:', requestData);
+      console.log('Email configuration not set up. Notification not sent.');
+      return;
+    }
+
+    // Format the request data for email
+    const formattedData = {
+      method: requestData.method,
+      headers: requestData.headers,
+      query: requestData.query,
+      body: requestData.body,
+      timestamp: requestData.timestamp
+    };
+
+    // Create email content with enhanced details and redirect button
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'Webhook Receiver <noreply@webhookreceiver.com>',
+      to: notificationEmail,
+      subject: `📡 New Webhook Received on "${endpointName}"`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #667eea; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background-color: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }
+            .details { background-color: white; padding: 15px; border-radius: 4px; margin: 15px 0; }
+            .endpoint-info { background-color: #e8f5e9; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #4caf50; }
+            pre { background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+            .btn { display: inline-block; background-color: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 15px; }
+            .btn:hover { background-color: #5a67d8; }
+            .footer { font-size: 0.8em; color: #666; margin-top: 20px; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>📡 New Webhook Received</h2>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>A new webhook request has been received on your endpoint:</p>
+
+            <div class="endpoint-info">
+              <h3>🎯 Endpoint Details</h3>
+              <p><strong>Name:</strong> ${endpointName}</p>
+              <p><strong>Endpoint ID:</strong> ${endpointId}</p>
+              <p><strong>URL:</strong> <a href="${endpointUrl}">${endpointUrl}</a></p>
+            </div>
+
+            <div class="details">
+              <h3>📋 Request Details</h3>
+              <p><strong>Method:</strong> ${formattedData.method}</p>
+              <p><strong>Timestamp:</strong> ${new Date(formattedData.timestamp).toLocaleString()}</p>
+
+              <h4>Headers:</h4>
+              <pre>${JSON.stringify(formattedData.headers, null, 2)}</pre>
+
+              <h4>Query Parameters:</h4>
+              <pre>${JSON.stringify(formattedData.query, null, 2)}</pre>
+
+              <h4>Body:</h4>
+              <pre>${JSON.stringify(formattedData.body, null, 2)}</pre>
+            </div>
+
+            <p>Click the button below to view this request and manage your webhooks:</p>
+
+            <a href="${endpointUrl}" class="btn" style="color: white; text-decoration: none;">🚀 View Webhook in Dashboard</a>
+
+            <div class="footer">
+              <p>This is an automated notification from Webhook Receiver.</p>
+              <p>© ${new Date().getFullYear()} Webhook Receiver. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
+    console.log(`Email notification sent successfully to ${notificationEmail} for endpoint ${endpointName}`);
+
+  } catch (error) {
+    console.error('Error sending notification email:', error);
+    // Don't throw the error to avoid breaking the webhook flow
+  }
+}
+
+// Setup email transporter
+let transporter = null;
+if (process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  transporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+  console.log('Email transporter configured successfully');
+} else {
+  console.log('Email configuration not found. Email notifications will be logged but not sent.');
+}
 
 connectMongo().then(() => {
   const PORT = process.env.PORT || 3000;

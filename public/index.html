@@ -323,9 +323,12 @@
     .endpoint-modal-content {
       background: white;
       border-radius: 12px;
-      padding: 24px;
-      min-width: 320px;
-      max-width: 400px;
+      padding: 32px;
+      min-width: 480px;
+      max-width: 600px;
+      width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
       animation: modalSlideIn 0.3s ease-out;
     }
@@ -397,7 +400,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 10000;
+      z-index: 10002;
       backdrop-filter: blur(4px);
     }
     .confirm-modal.show {
@@ -406,9 +409,12 @@
     .confirm-modal-content {
       background: white;
       border-radius: 12px;
-      padding: 24px;
-      min-width: 320px;
-      max-width: 400px;
+      padding: 32px;
+      min-width: 480px;
+      max-width: 600px;
+      width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
       animation: modalSlideIn 0.3s ease-out;
     }
@@ -483,7 +489,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 10000;
+      z-index: 10002;
       backdrop-filter: blur(4px);
     }
     .prompt-modal.show {
@@ -495,6 +501,9 @@
       padding: 32px;
       min-width: 480px;
       max-width: 600px;
+      width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
       animation: modalSlideIn 0.3s ease-out;
     }
@@ -608,7 +617,7 @@
       background: linear-gradient(135deg, #059669 0%, #047857 100%);
     }
     #g_idsignin-container {
-      margin-bottom: 30px;
+      margin-bottom: 0;
     }
     #userInfo {
       background: rgba(255, 255, 255, 0.1);
@@ -637,27 +646,7 @@
       min-width: 0;
       cursor: pointer;
     }
-    #logoutBtn {
-      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      margin-top: 8px;
-      margin-bottom: 4px;
-      align-self: flex-start;
-      max-width: 120px;
-      transition: var(--transition-fast);
-      box-shadow: var(--shadow-sm);
-    }
-    #logoutBtn:hover { 
-      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
+
     .main-area {
       flex: 1;
       display: flex;
@@ -697,7 +686,7 @@
       background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: var(--border-radius);
-      padding: 12px 60px 12px 16px;
+      padding: 12px 16px;
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-size: 0.9rem;
       color: #000000 !important;
@@ -715,52 +704,17 @@
       line-height: 1.3;
       min-height: 20px;
       opacity: 1 !important;
-    }
-    #copyEndpointBtn {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      border: none;
-      border-radius: 0 var(--border-radius) var(--border-radius) 0;
-      color: white;
       cursor: pointer;
-      font-weight: 600;
-      padding: 12px 20px;
-      font-size: 0.9rem;
-      transition: var(--transition-fast);
+    }
+    #endpointUrl:hover {
+      background: #f9fafb;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
       box-shadow: var(--shadow-md);
-      letter-spacing: 0.01em;
-      position: absolute;
-      right: 0;
-      top: 0;
-      height: 100%;
-      min-width: 80px;
-      white-space: nowrap;
-      overflow: hidden;
-      position: relative;
-      overflow: hidden;
     }
-    #copyEndpointBtn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-    #copyEndpointBtn:hover::before {
-      left: 100%;
-    }
-    #copyEndpointBtn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-    #copyEndpointBtn:disabled {
-      background-color: #bbb;
-      cursor: default;
-    }
-    #copyEndpointBtn:hover:not(:disabled) {
-      background: var(--primary-dark);
+    #endpointUrl:active {
+      background: #f3f4f6;
+      transform: translateY(0);
     }
     .toggle-details-btn {
       background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -1047,6 +1001,353 @@
       letter-spacing: 0.02em;
       font-weight: 500;
     }
+
+    /* Profile Icon Styles */
+    .profile-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .profile-icon:hover {
+      transform: scale(1.1);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .profile-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-icon::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      pointer-events: none;
+      margin-bottom: 8px;
+    }
+
+    .profile-icon:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Profile Dropdown Menu */
+    .profile-dropdown {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      min-width: 480px;
+      max-width: 600px;
+      width: 80%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      animation: modalSlideIn 0.3s ease-out;
+      position: relative;
+      z-index: 10003;
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .profile-dropdown.show {
+      display: block;
+    }
+
+    .profile-dropdown.loading {
+      position: relative;
+      min-height: 100px;
+    }
+
+    .profile-dropdown.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .profile-dropdown-header {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    .profile-dropdown-email {
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .profile-dropdown-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      font-weight: 500;
+    }
+
+    .profile-dropdown-item:hover {
+      background: #f3f4f6;
+      transform: translateY(-1px);
+    }
+
+    .profile-dropdown-item.logout {
+      color: #ef4444;
+      font-weight: 600;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 12px;
+      padding-top: 16px;
+    }
+
+    .profile-dropdown-item.logout:hover {
+      background: #fef2f2;
+      color: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    .profile-dropdown-item i {
+      width: 18px;
+      text-align: center;
+      font-size: 1rem;
+      opacity: 0.7;
+    }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #3b82f6;
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    #notificationEmailInput:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Logout loader styles */
+    .logout-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10004;
+      backdrop-filter: blur(4px);
+    }
+
+    .logout-loader.show {
+      display: flex;
+    }
+
+    .logout-loader-content {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .logout-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px auto;
+    }
+
+    .logout-text {
+      color: #1f2937;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .profile-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10002;
+      backdrop-filter: blur(4px);
+    }
+
+    .profile-backdrop.show {
+      display: flex;
+    }
+
+    .email-notifications-loading .toggle-icon {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #e2e8f0;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+    }
+
+    /* Increase endpoint list height */
+    #endpointList {
+      max-height: calc(100vh - 300px) !important;
+      min-height: 200px;
+      overflow-y: auto;
+      padding-right: 8px;
+      margin-right: -8px;
+    }
+
+    /* Custom scrollbar for endpoint list */
+    #endpointList::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #endpointList::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    #endpointList::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+    }
+
+    #endpointList::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Toast notifications */
+    .toast-notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      border-radius: 4px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .toast-notification.success {
+      background-color: #10b981;
+    }
+
+    .toast-notification.error {
+      background-color: #ef4444;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
     @media (max-width: 1024px) {
       .main-inner-content {
         padding: 24px 32px 16px 32px;
@@ -1119,10 +1420,6 @@
       .endpoint-url-row {
         flex-direction: column;
         gap: 12px;
-      }
-      #copyEndpointBtn {
-        width: 100%;
-        padding: 14px 20px;
       }
     }
     @media (max-width: 480px) {
@@ -1232,19 +1529,20 @@
         <span>Payload Box</span>
         <small style="font-size: 0.8rem; opacity: 0.8; display: block; margin-top: 4px;">Webhook Receiver</small>
       </div>
+      <div style="position: relative; z-index: 10001;">
+        <div id="profileIcon" class="profile-icon" title="User profile" style="display: none;">
+          <img src="" alt="Profile" id="profileImage">
+        </div>
+      </div>
     </header>
     <nav class="sidebar-main" aria-label="Main navigation">
       <button id="newEndpointBtn" disabled aria-label="Create new webhook endpoint">
         <span style="margin-right: 8px;">+</span> Create New Endpoint
       </button>
-      <h3 style="color: rgba(255,255,255,0.9); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Your Endpoints</h3>
+      <h3 id="yourEndpointsHeader" style="color: rgba(255,255,255,0.9); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Your Endpoints</h3>
       <ul id="endpointList" tabindex="0" role="listbox" aria-label="Your webhook endpoints"></ul>
       <section id="g_idsignin-container" aria-label="Google Sign-in container">
         <div id="g_idsignin" role="button" aria-label="Google Sign-in Button"></div>
-      </section>
-      <section id="userInfo" aria-live="polite" aria-atomic="true" aria-label="User information panel">
-        <div id="userEmail" tabindex="0" title=""></div>
-        <button id="logoutBtn" aria-label="Logout from your account">Logout</button>
       </section>
     </nav>
     <footer class="sidebar-footer">
@@ -1266,10 +1564,7 @@
     <div class="main-inner-content">
       <section class="endpoint-url-row" aria-label="Endpoint URL section">
         <div class="endpoint-url-container">
-          <div id="endpointUrl" tabindex="0" title="Your webhook endpoint URL will appear here" aria-label="Webhook endpoint URL"></div>
-          <button id="copyEndpointBtn" disabled aria-label="Copy endpoint URL to clipboard">
-            <span style="margin-right: 8px;">📋</span> Copy
-          </button>
+          <div id="endpointUrl" tabindex="0" title="Click to copy your webhook endpoint URL" aria-label="Webhook endpoint URL"></div>
         </div>
       </section>
       <section class="requests-table-container" id="requestsTableContainer" role="region" aria-live="polite" aria-atomic="true" aria-relevant="additions" aria-label="Webhook requests">
@@ -1289,18 +1584,20 @@
   (function() {
     const newEndpointBtn = document.getElementById('newEndpointBtn');
     const endpointUrl = document.getElementById('endpointUrl');
-    const copyEndpointBtn = document.getElementById('copyEndpointBtn');
     const requestsDiv = document.getElementById('requests');
     const endpointList = document.getElementById('endpointList');
+    const yourEndpointsHeader = document.getElementById('yourEndpointsHeader');
     const g_idsignin = document.getElementById('g_idsignin');
     const userInfo = document.getElementById('userInfo');
     const userEmail = document.getElementById('userEmail');
-    const logoutBtn = document.getElementById('logoutBtn');
+    // Removed duplicate logoutBtn reference - using profile dropdown logout instead
     const g_idsignin_container = document.getElementById('g_idsignin-container');
     const toggleAllBtn = document.getElementById('toggleAllDetailsBtn');
     const connectionBanner = document.getElementById('connectionBanner');
     const reloadBtn = document.getElementById('reloadBtn');
-
+    const logoutLoader = document.getElementById('logoutLoader');
+    
+    // Profile dropdown elements
     const STORAGE_KEY = 'webhookAuthToken';
     const STORAGE_TIME_KEY = 'webhookAuthTokenTime';
 
@@ -1315,6 +1612,7 @@
     const VIEWED_WEBHOOKS_KEY = 'viewedWebhooks';
     let viewedWebhooks = new Set(JSON.parse(localStorage.getItem(VIEWED_WEBHOOKS_KEY) || '[]'));
     let highlightRequestId = null;
+    let emailNotificationsEnabled = false;
 
     // Set to keep track of viewed requests by index
     let viewedRequests = new Set();
@@ -1352,6 +1650,271 @@
       const dt = new Date(iso);
       if (Number.isNaN(dt.getTime())) return iso;
       return dt.toLocaleString();
+    }
+
+    // Profile dropdown functionality
+    function initProfileDropdown() {
+      // Toggle dropdown
+      profileIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpening = !profileDropdown.classList.contains('show');
+        if (isOpening) {
+          profileDropdown.classList.add('show');
+          profileBackdrop.classList.add('show');
+        } else {
+          profileDropdown.classList.remove('show');
+          profileBackdrop.classList.remove('show');
+        }
+      });
+
+      // Close dropdown when clicking backdrop
+      profileBackdrop.addEventListener('click', (e) => {
+        profileDropdown.classList.remove('show');
+        profileBackdrop.classList.remove('show');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        const isClickInsideDropdown = profileDropdown.contains(e.target);
+        const isClickOnProfileIcon = profileIcon.contains(e.target);
+        const isClickOnEmailInput = notificationEmailInput.contains(e.target);
+        
+        if (!isClickInsideDropdown && !isClickOnProfileIcon && !isClickOnEmailInput) {
+          profileDropdown.classList.remove('show');
+          profileBackdrop.classList.remove('show');
+        }
+      });
+
+      // Add specific event listeners for each dropdown item
+      const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
+      const manageAccountBtn = document.getElementById('manageAccountBtn');
+      const logoutBtnDropdown = document.getElementById('logoutBtn');
+
+      if (emailNotificationsToggle) {
+        emailNotificationsToggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+
+        // Handle toggle switch changes
+        const emailNotificationsCheckbox = document.getElementById('emailNotificationsCheckbox');
+        emailNotificationsCheckbox.addEventListener('change', async (e) => {
+          e.stopPropagation();
+          const isEnabled = e.target.checked;
+
+          if (isEnabled) {
+            // Show email input field
+            const emailInputContainer = document.getElementById('emailInputContainer');
+            emailInputContainer.style.display = 'block';
+            // Pre-fill with current user email if available
+            if (currentUser && currentUser.email) {
+              const notificationEmailInput = document.getElementById('notificationEmailInput');
+              notificationEmailInput.value = currentUser.email;
+            }
+            // Focus on the input field
+            setTimeout(() => {
+              const notificationEmailInput = document.getElementById('notificationEmailInput');
+              notificationEmailInput.focus();
+            }, 100);
+          } else {
+            // Hide email input field
+            const emailInputContainer = document.getElementById('emailInputContainer');
+            emailInputContainer.style.display = 'none';
+            const notificationEmailInput = document.getElementById('notificationEmailInput');
+            notificationEmailInput.value = '';
+          }
+
+          // Call backend API to save the preference
+          try {
+            const endpoint = isEnabled ? '/api/notifications/enable' : '/api/notifications/disable';
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to update notification settings');
+            }
+
+            emailNotificationsEnabled = isEnabled;
+            showSuccessToast(isEnabled ? 'Email notifications enabled!' : 'Email notifications disabled!');
+          } catch (error) {
+            console.error('Error updating notification settings:', error);
+            showErrorToast('Failed to update notification settings');
+            // Revert the toggle if there was an error
+            emailNotificationsCheckbox.checked = !isEnabled;
+          }
+        });
+
+        // Handle email input changes
+        const notificationEmailInput = document.getElementById('notificationEmailInput');
+        const editEmailBtn = document.getElementById('editEmailBtn');
+        const saveEmailBtn = document.getElementById('saveEmailBtn');
+        
+        notificationEmailInput.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent dropdown from closing when clicking input
+        });
+        
+        notificationEmailInput.addEventListener('input', (e) => {
+          e.stopPropagation();
+          // Show save button when user starts typing
+          if (e.target.value.trim()) {
+            editEmailBtn.style.display = 'none';
+            saveEmailBtn.style.display = 'flex';
+          } else {
+            editEmailBtn.style.display = 'flex';
+            saveEmailBtn.style.display = 'none';
+          }
+          console.log('Notification email:', e.target.value);
+        });
+
+        // Edit button click
+        editEmailBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          notificationEmailInput.focus();
+          notificationEmailInput.select();
+        });
+
+        // Save button click
+        saveEmailBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const email = notificationEmailInput.value.trim();
+          if (email) {
+            try {
+              const response = await fetch('/api/notifications/email', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${authToken}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save email');
+              }
+
+              const data = await response.json();
+              editEmailBtn.style.display = 'flex';
+              saveEmailBtn.style.display = 'none';
+              // Show success feedback
+              saveEmailBtn.style.background = '#10b981';
+              setTimeout(() => {
+                saveEmailBtn.style.background = 'none';
+              }, 1000);
+              showSuccessToast('Email saved successfully!');
+            } catch (error) {
+              console.error('Error saving email:', error);
+              showErrorToast('Failed to save email');
+            }
+          }
+        });
+
+        // Handle Enter key in email input
+        notificationEmailInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && saveEmailBtn.style.display !== 'none') {
+            e.preventDefault();
+            saveEmailBtn.click();
+          }
+        });
+      }
+
+      if (logoutBtnDropdown) {
+        logoutBtnDropdown.addEventListener('click', (e) => {
+          e.stopPropagation();
+          profileDropdown.classList.remove('show');
+          profileBackdrop.classList.remove('show');
+          googleLogout();
+        });
+      }
+    }
+
+    // Update profile info when user is signed in
+    function updateProfileInfo(user) {
+      if (user) {
+        profileIcon.style.display = 'flex';
+        const profileImage = profileIcon.querySelector('img');
+        profileImage.src = user.picture || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+        profileImage.onerror = () => {
+          profileImage.src = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+        };
+        profileDropdownEmail.textContent = user.email;
+        // Set dropdown profile image
+        profileDropdownImage.src = user.picture || 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+        profileDropdownImage.onerror = () => {
+          profileDropdownImage.src = 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y';
+        };
+      } else {
+        profileIcon.style.display = 'none';
+        profileDropdownEmail.textContent = '';
+        profileDropdownImage.src = '';
+      }
+    }
+
+    // Check notification status on load
+    async function checkNotificationStatus() {
+      if (!authToken) return;
+
+      try {
+        profileDropdown.classList.add('loading');
+        const response = await fetch('/api/notifications/status', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          emailNotificationsEnabled = data.enabled;
+          emailNotificationsCheckbox.checked = data.enabled;
+
+          // Set the email if available
+          if (data.email) {
+            const notificationEmailInput = document.getElementById('notificationEmailInput');
+            notificationEmailInput.value = data.email;
+          }
+
+          // Show/hide email input based on notification status
+          if (data.enabled) {
+            emailInputContainer.style.display = 'block';
+          } else {
+            emailInputContainer.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking notification status:', error);
+      } finally {
+        profileDropdown.classList.remove('loading');
+      }
+    }
+
+    // Call this when user logs in
+    function onUserAuthenticated(user) {
+      updateProfileInfo(user);
+      checkNotificationStatus();
+    }
+
+    // Toast notification functions
+    function showSuccessToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification success';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    function showErrorToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast-notification error';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
     }
 
     function createMethodBadge(method) {
@@ -1704,6 +2267,33 @@
         promptOkBtn.addEventListener('click', acceptPrompt);
       }
       
+      // Initialize profile dropdown
+      initProfileDropdown();
+      
+      // Check if user is already logged in on page load
+      const savedToken = loadLogin();
+      if (savedToken) {
+        authToken = savedToken;
+        // Verify token and get user data
+        fetch('/api/verify-token', {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.user) {
+            currentUser = data.user;
+            onUserAuthenticated(data.user);
+            loadEndpoints();
+          }
+        })
+        .catch(error => {
+          console.error('Error verifying token:', error);
+          clearLogin();
+        });
+      }
+      
       // Close modals when clicking outside
       document.getElementById('confirmModal').addEventListener('click', (e) => {
         if (e.target === e.currentTarget) {
@@ -1827,7 +2417,6 @@
         endpointUrlElement.textContent = url;
         endpointUrlElement.value = url; // Also set as value for input elements
       }
-      copyEndpointBtn.disabled = false;
       allRequests = [];
       viewedRequests.clear();
       renderTable(allRequests);
@@ -1836,7 +2425,7 @@
         li.classList.toggle('selected', li.querySelector('.list-label')?.textContent === (endpoints.find(ep => ep.id === id)?.name || id));
         li.setAttribute('aria-selected', li.classList.contains('selected') ? 'true' : 'false');
       });
-      
+
       // Mark as viewed when selected
       if (id && !viewedWebhooks.has(id)) {
         viewedWebhooks.add(id);
@@ -1845,18 +2434,24 @@
       }
     }
 
-    copyEndpointBtn.onclick = () => {
+    // Make endpoint URL clickable for copying
+    endpointUrl.onclick = () => {
       const txt = endpointUrl.textContent.trim();
       if (!txt) {
         showAlert('No URL', 'No URL available to copy.');
         return;
       }
       navigator.clipboard.writeText(txt).then(() => {
-        copyEndpointBtn.textContent = 'Copied!';
-        copyEndpointBtn.disabled = true;
+        // Show visual feedback that URL was copied
+        const originalText = endpointUrl.textContent;
+        endpointUrl.textContent = '📋 Copied to clipboard!';
+        endpointUrl.style.backgroundColor = '#dcfce7';
+        endpointUrl.style.borderColor = '#10b981';
+
         setTimeout(() => {
-          copyEndpointBtn.textContent = 'Copy';
-          copyEndpointBtn.disabled = false;
+          endpointUrl.textContent = originalText;
+          endpointUrl.style.backgroundColor = '';
+          endpointUrl.style.borderColor = '';
         }, 2000);
       }).catch(() => showAlert('Copy Failed', 'Failed to copy URL to clipboard.'));
     };
@@ -1981,6 +2576,7 @@
         authToken = response.credential;
         saveLogin(authToken); // Persist login token
         currentUser = data.user;
+        onUserAuthenticated(data.user);
         updateUIOnSignIn();
         return loadEndpoints();
       }).catch(async err => {
@@ -1991,21 +2587,44 @@
 
     function updateUIOnSignIn() {
       g_idsignin_container.style.display = 'none';
-      userInfo.style.display = 'flex';
-      userEmail.textContent = currentUser.email;
-      userEmail.title = currentUser.email;
+      yourEndpointsHeader.style.display = 'block';
+      endpointList.style.display = 'block';
+      // userInfo is now handled by profile icon in header
       newEndpointBtn.disabled = false;
     }
 
     function updateUIOnSignOut() {
       g_idsignin_container.style.display = 'block';
-      userInfo.style.display = 'none';
-      userEmail.textContent = '';
-      userEmail.title = '';
+      yourEndpointsHeader.style.display = 'none';
+      endpointList.style.display = 'none';
+      updateProfileInfo(null);
+      
+      // Clear profile dropdown elements
+      if (profileDropdownEmail) {
+        profileDropdownEmail.textContent = '';
+      }
+      if (profileDropdownImage) {
+        profileDropdownImage.src = '';
+      }
+      if (emailNotificationsCheckbox) {
+        emailNotificationsCheckbox.checked = false;
+      }
+      if (emailInputContainer) {
+        emailInputContainer.style.display = 'none';
+      }
+      if (notificationEmailInput) {
+        notificationEmailInput.value = '';
+      }
+      if (editEmailBtn) {
+        editEmailBtn.style.display = 'flex';
+      }
+      if (saveEmailBtn) {
+        saveEmailBtn.style.display = 'none';
+      }
+      
       newEndpointBtn.disabled = true;
       currentEndpoint = null;
       endpointUrl.textContent = '';
-      copyEndpointBtn.disabled = true;
       allRequests = [];
       viewedRequests.clear();
       renderTable(allRequests);
@@ -2052,15 +2671,33 @@
       }
     }
 
-    logoutBtn.onclick = () => googleLogout();
+    // Logout functionality is handled by the profile dropdown logout button
 
     // Clear saved token on logout
     function googleLogout() {
-      authToken = null;
-      currentUser = null;
-      clearLogin();
-      updateUIOnSignOut();
-      google.accounts.id.disableAutoSelect();
+      // Show logout loader immediately
+      if (logoutLoader) {
+        logoutLoader.classList.add('show');
+      }
+      
+      // Close profile dropdown
+      if (profileDropdown) {
+        profileDropdown.classList.remove('show');
+      }
+      if (profileBackdrop) {
+        profileBackdrop.classList.remove('show');
+      }
+      
+      // Perform logout after a short delay to allow loader to show
+      setTimeout(() => {
+        authToken = null;
+        currentUser = null;
+        clearLogin();
+        google.accounts.id.disableAutoSelect();
+        
+        // Refresh page after logout to ensure clean state
+        window.location.reload();
+      }, 2000);
     }
 
     // Load stored token on page load and validate it
@@ -2077,6 +2714,7 @@
           return r.json();
         }).then(data => {
           currentUser = data.user;
+          onUserAuthenticated(data.user);
           updateUIOnSignIn();
           loadEndpoints();
         }).catch(() => {
@@ -2088,6 +2726,10 @@
     }
 
     window.onload = () => {
+      // Initially hide the endpoints header and list until user is logged in
+      yourEndpointsHeader.style.display = 'none';
+      endpointList.style.display = 'none';
+      
       google.accounts.id.initialize({
         client_id: '961084624040-mq5mjicgbek07uk3ihhjr69ft695u7a7.apps.googleusercontent.com',
         callback: handleCredentialResponse,
@@ -2109,6 +2751,73 @@
   <script>
   // Set light theme by default
   document.documentElement.setAttribute('data-theme', 'light');
+  </script>
+  <!-- Logout Loader -->
+  <div id="logoutLoader" class="logout-loader">
+    <div class="logout-loader-content">
+      <div class="logout-spinner"></div>
+      <div class="logout-text">Signing out...</div>
+    </div>
+  </div>
+  <!-- Profile Dropdown Menu -->
+  <div id="profileBackdrop" class="profile-backdrop">
+    <div id="profileDropdown" class="profile-dropdown">
+      <div class="profile-dropdown-header">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 8px;">
+          <img src="" alt="Profile" id="profileDropdownImage" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;">
+          <div>
+            <div class="profile-dropdown-email" id="profileDropdownEmail" style="font-size: 1rem; font-weight: 600; color: #1f2937;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="profile-dropdown-item" id="emailNotificationsToggle" style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <i class="toggle-icon" style="font-size: 1.1rem;"></i> 
+          <span style="font-weight: 500;">Email Notifications</span>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="emailNotificationsCheckbox">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="emailInputContainer" style="display: none; padding: 12px 20px 20px 20px;">
+        <div style="position: relative;">
+          <input type="email" id="notificationEmailInput" placeholder="Enter email address" style="width: 100%; padding: 12px 50px 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 0.95rem; outline: none; transition: all 0.2s; background: #f9fafb; box-sizing: border-box;">
+          <button id="editEmailBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 6px; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          <button id="saveEmailBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 6px; border-radius: 4px; display: none; align-items: center; justify-content: center; transition: all 0.2s;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="profile-dropdown-item logout" id="logoutBtn">
+        <i class="logout-icon" style="font-size: 1.1rem;"></i> Logout
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Profile dropdown elements - declared right after HTML
+    const profileIcon = document.getElementById('profileIcon');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const profileBackdrop = document.getElementById('profileBackdrop');
+    const profileDropdownEmail = document.getElementById('profileDropdownEmail');
+    const profileDropdownImage = document.getElementById('profileDropdownImage');
+    const emailNotificationsToggle = document.getElementById('emailNotificationsToggle');
+    const emailNotificationsCheckbox = document.getElementById('emailNotificationsCheckbox');
+    const emailInputContainer = document.getElementById('emailInputContainer');
+    const notificationEmailInput = document.getElementById('notificationEmailInput');
+    const editEmailBtn = document.getElementById('editEmailBtn');
+    const saveEmailBtn = document.getElementById('saveEmailBtn');
+    const logoutBtnDropdown = document.getElementById('logoutBtn');
   </script>
 </body>
 </html>
