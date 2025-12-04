@@ -397,7 +397,7 @@ async function sendWebhookNotification(creatorEmail, endpointId, requestData, re
     const mailOptions = {
       from: process.env.EMAIL_FROM || 'Webhook Receiver <noreply@webhookreceiver.com>',
       to: notificationEmail,
-      subject: `📡 New Webhook Received on "${endpointName}"`,
+      subject: `New Webhook Received on "${endpointName}"`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -416,21 +416,21 @@ async function sendWebhookNotification(creatorEmail, endpointId, requestData, re
         </head>
         <body>
           <div class="header">
-            <h2>📡 New Webhook Received</h2>
+            <h2>New Webhook Received</h2>
           </div>
           <div class="content">
             <p>Hello,</p>
             <p>A new webhook request has been received on your endpoint:</p>
 
             <div class="endpoint-info">
-              <h3>🎯 Endpoint Details</h3>
+              <h3>Endpoint Details</h3>
               <p><strong>Name:</strong> ${endpointName}</p>
               <p><strong>Endpoint ID:</strong> ${endpointId}</p>
               <p><strong>URL:</strong> <a href="${endpointUrl}">${endpointUrl}</a></p>
             </div>
 
             <div class="details">
-              <h3>📋 Request Details</h3>
+              <h3>Request Details</h3>
               <p><strong>Method:</strong> ${formattedData.method}</p>
               <p><strong>Timestamp:</strong> ${new Date(formattedData.timestamp).toLocaleString()}</p>
 
@@ -446,7 +446,7 @@ async function sendWebhookNotification(creatorEmail, endpointId, requestData, re
 
             <p>Click the button below to view this request and manage your webhooks:</p>
 
-            <a href="${endpointUrl}" class="btn" style="color: white; text-decoration: none;">🚀 View Webhook in Dashboard</a>
+            <a href="${endpointUrl}" class="btn" style="color: white; text-decoration: none;">View Webhook in Dashboard</a>
 
             <div class="footer">
               <p>This is an automated notification from Webhook Receiver.</p>
